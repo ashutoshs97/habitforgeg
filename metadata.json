@@ -1,0 +1,5 @@
+{
+  "name": "HabitForge",
+  "description": "A modern, responsive web application for habit formation and addiction breaking. It uses gamification elements like streaks, points, and achievements to keep users motivated on their journey of self-improvement.",
+  "requestFramePermissions": []
+}
