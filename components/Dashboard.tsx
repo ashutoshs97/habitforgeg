@@ -16,6 +16,7 @@ import GoalRefinementView from './GoalRefinementView';
 import CalorieWidget from './CalorieWidget';
 import PointTrackerWidget from './PointTrackerWidget';
 import TopStreakWidget from './TopStreakWidget';
+import FoodScannerWidget from './FoodScannerWidget';
 import { useHabits } from '../context/HabitContext';
 import type { Habit, Notification } from '../types';
 
@@ -133,6 +134,9 @@ const Dashboard: React.FC = () => {
                              </div>
                              <div className="col-span-1 h-40 lg:h-auto">
                                  <TopStreakWidget />
+                             </div>
+                             <div className="col-span-1 h-40 lg:h-auto">
+                                 <FoodScannerWidget onClick={() => setActiveTab('food-scanner')} />
                              </div>
                           </div>
 
