@@ -14,8 +14,9 @@ app.use(express.json({ limit: '10mb' })); // Increased limit for base64 images
 // CONFIGURATION
 // ------------------------------------------------------------------
 // In production (Render), these come from Environment Variables
-// FALLBACK ADDED: We use the hardcoded key if the Environment Variable is missing to prevent crashes.
-const GEMINI_API_KEY = process.env.API_KEY || "AIzaSyAQNW-Eh3JvlDGLHh4kcj83YCujSat61-0"; 
+// SECURITY UPDATE: Removed hardcoded key to prevent leaks. 
+// You MUST set 'API_KEY' in your Render Dashboard.
+const GEMINI_API_KEY = process.env.API_KEY;
 
 // --- CRITICAL: Debugging Logs for Deployment ---
 if (!GEMINI_API_KEY) {
@@ -47,7 +48,7 @@ app.post('/api/scan-food', async (req, res) => {
 
     if (!GEMINI_API_KEY) {
         console.error("[Backend] Error: API Key is missing. Cannot call Gemini.");
-        return res.status(500).json({ error: "Server Misconfiguration: API_KEY missing" });
+        return res.status(500).json({ error: "Server Misconfiguration: API_KEY missing in Environment Variables" });
     }
 
     try {
@@ -105,7 +106,7 @@ app.post('/api/refine-goal', async (req, res) => {
     const { habitData } = req.body;
 
     if (!GEMINI_API_KEY) {
-         return res.status(500).json({ error: "Server Misconfiguration: API_KEY missing" });
+         return res.status(500).json({ error: "Server Misconfiguration: API_KEY missing in Environment Variables" });
     }
 
     try {
