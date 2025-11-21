@@ -1,6 +1,6 @@
-const express = require('express');
-const cors = require('cors');
-const { GoogleGenAI, Type } = require("@google/genai");
+import express from 'express';
+import cors from 'cors';
+import { GoogleGenAI, Type } from "@google/genai";
 
 // Initialize Express
 const app = express();
@@ -35,7 +35,9 @@ app.post('/api/scan-food', async (req, res) => {
 
     try {
         const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+        // Remove data:image/xxx;base64, prefix
         const base64Data = imageBase64.split(',')[1];
+        // Extract mimeType
         const mimeType = imageBase64.substring(imageBase64.indexOf(":") + 1, imageBase64.indexOf(";"));
 
         const foodSchema = {
@@ -117,7 +119,7 @@ app.post('/api/refine-goal', async (req, res) => {
 // ------------------------------------------------------------------
 app.post('/api/reminders/send-test', async (req, res) => {
     const { email } = req.body;
-    // In production, use real Nodemailer transport here
+    // In production, you would import nodemailer here
     console.log(`[Mock Email] Sending test reminder to ${email}`);
     setTimeout(() => {
         res.json({ success: true, message: `Test email sent to ${email}` });
