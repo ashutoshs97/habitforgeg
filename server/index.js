@@ -14,7 +14,17 @@ app.use(express.json({ limit: '10mb' })); // Increased limit for base64 images
 // CONFIGURATION
 // ------------------------------------------------------------------
 // In production (Render), these come from Environment Variables
-const GEMINI_API_KEY = process.env.API_KEY; 
+// FALLBACK ADDED: We use the hardcoded key if the Environment Variable is missing to prevent crashes.
+const GEMINI_API_KEY = process.env.API_KEY || "AIzaSyAQNW-Eh3JvlDGLHh4kcj83YCujSat61-0"; 
+
+// --- CRITICAL: Debugging Logs for Deployment ---
+if (!GEMINI_API_KEY) {
+    console.error("❌ CRITICAL ERROR: API_KEY environment variable is NOT set!");
+    console.error("👉 Go to Render Dashboard -> Settings -> Environment Variables and add 'API_KEY'.");
+} else {
+    // Log the first 4 chars to verify key is loaded (safe to log)
+    console.log("✅ API_KEY is loaded:", GEMINI_API_KEY.substring(0, 4) + "...");
+}
 
 // ------------------------------------------------------------------
 // 0. HEALTH CHECK (For Render)
@@ -27,17 +37,29 @@ app.get('/', (req, res) => {
 // 1. AI FOOD SCANNER ENDPOINT
 // ------------------------------------------------------------------
 app.post('/api/scan-food', async (req, res) => {
+    console.log("[Backend] Received /api/scan-food request");
     const { imageBase64 } = req.body;
 
     if (!imageBase64) {
+        console.error("[Backend] Error: No image data provided in body");
         return res.status(400).json({ error: "No image data provided" });
+    }
+
+    if (!GEMINI_API_KEY) {
+        console.error("[Backend] Error: API Key is missing. Cannot call Gemini.");
+        return res.status(500).json({ error: "Server Misconfiguration: API_KEY missing" });
     }
 
     try {
         const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-        // Remove data:image/xxx;base64, prefix
-        const base64Data = imageBase64.split(',')[1];
-        // Extract mimeType
+        
+        // Validation: Ensure we can split the base64 string
+        const parts = imageBase64.split(',');
+        if (parts.length !== 2) {
+            throw new Error("Invalid Base64 image format");
+        }
+        const base64Data = parts[1];
+        // Extract mimeType safely
         const mimeType = imageBase64.substring(imageBase64.indexOf(":") + 1, imageBase64.indexOf(";"));
 
         const foodSchema = {
@@ -48,6 +70,8 @@ app.post('/api/scan-food', async (req, res) => {
             },
             required: ["food_item_name", "calories_value_kcals"]
         };
+
+        console.log(`[Backend] Sending image (${mimeType}) to Gemini...`);
 
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
@@ -64,10 +88,12 @@ app.post('/api/scan-food', async (req, res) => {
             }
         });
 
+        console.log("[Backend] Gemini Response Received");
         const analysis = JSON.parse(response.text);
         res.json(analysis);
     } catch (error) {
-        console.error("Food Scan Error:", error);
+        console.error("❌ Food Scan Error Details:", error);
+        // Send the actual error message back for easier debugging in the frontend
         res.status(500).json({ error: "AI Analysis Failed", details: error.message });
     }
 });
@@ -77,6 +103,10 @@ app.post('/api/scan-food', async (req, res) => {
 // ------------------------------------------------------------------
 app.post('/api/refine-goal', async (req, res) => {
     const { habitData } = req.body;
+
+    if (!GEMINI_API_KEY) {
+         return res.status(500).json({ error: "Server Misconfiguration: API_KEY missing" });
+    }
 
     try {
         const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });

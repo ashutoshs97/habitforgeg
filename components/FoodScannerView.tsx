@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 
 // API Configuration
@@ -78,6 +77,8 @@ const FoodScannerView: React.FC = () => {
     try {
       const base64Image = await convertToBase64(file);
 
+      console.log(`Sending request to: ${API_URL}/api/scan-food`);
+
       // Call the Unified Backend
       const response = await fetch(`${API_URL}/api/scan-food`, {
           method: 'POST',
@@ -85,14 +86,18 @@ const FoodScannerView: React.FC = () => {
           body: JSON.stringify({ imageBase64: base64Image })
       });
 
-      if (!response.ok) throw new Error("Failed to analyze image via backend");
+      if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error("Backend Error Data:", errorData);
+          throw new Error(errorData.error || errorData.details || "Server Error");
+      }
 
       const data = await response.json();
       setAnalysisResult(data);
 
     } catch (err: any) {
-      console.error(err);
-      setError("Could not identify food. Please try a clearer image or check your connection.");
+      console.error("Detailed Food Scanner Error:", err);
+      setError(`Analysis Failed: ${err.message || "Check connection"}`);
     } finally {
       setIsAnalyzing(false);
     }
