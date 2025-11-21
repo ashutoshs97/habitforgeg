@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Habit } from '../types';
 import { useHabits } from '../context/HabitContext';
 
@@ -17,38 +17,75 @@ const GroupIcon: React.FC<{className?: string; title?: string;}> = ({className, 
 
 const HabitItem: React.FC<HabitItemProps> = ({ habit, onViewProgress, onShare }) => {
   const { dispatch } = useHabits();
-  const [isHovered, setIsHovered] = useState(false);
   const [isClicking, setIsClicking] = useState(false);
+  const [triggerCelebration, setTriggerCelebration] = useState(false);
 
   const today = new Date();
   const todayString = today.toISOString().split('T')[0];
   const isCompletedToday = habit.completionHistory.some(iso => iso.startsWith(todayString));
 
-  const handleComplete = () => {
+  // Robust cleanup for the celebration animation to prevent infinite loops
+  useEffect(() => {
+      let timer: ReturnType<typeof setTimeout>;
+      if (triggerCelebration) {
+          // Stop the animation strictly after 1 second
+          timer = setTimeout(() => {
+              setTriggerCelebration(false);
+          }, 1000);
+      }
+      return () => {
+          if (timer) clearTimeout(timer);
+      };
+  }, [triggerCelebration]);
+
+  const handleComplete = (e: React.MouseEvent) => {
+    e.stopPropagation(); 
     if (!isCompletedToday) {
       setIsClicking(true);
-      // Delay the actual dispatch slightly to let the animation play
+      // Slight delay to allow the "click" animation (scale down) to be seen
       setTimeout(() => {
         dispatch({ type: 'COMPLETE_HABIT', payload: { habitId: habit.id, today } });
         setIsClicking(false);
+        setTriggerCelebration(true); 
       }, 150);
     }
   };
   
-  const handleDelete = () => {
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation(); // Ensure this click doesn't bubble to the card
+    
     if (window.confirm(`Are you sure you want to delete the habit "${habit.name}"? This action cannot be undone.`)) {
-      dispatch({ type: 'DELETE_HABIT', payload: { habitId: habit.id } });
+        dispatch({ type: 'DELETE_HABIT', payload: { habitId: habit.id } });
     }
-  }
+  };
+
+  const handleShareClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onShare(habit);
+  };
+
+  const handleViewProgressClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onViewProgress(habit.id);
+  };
 
   return (
     <div
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className="bg-white dark:bg-neutral-focus rounded-2xl shadow-lg p-5 flex items-center justify-between transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group animate-pop-in relative overflow-hidden"
+      className="bg-white dark:bg-neutral-focus rounded-2xl shadow-lg p-5 flex items-center justify-between transition-all duration-300 hover:shadow-xl hover:-translate-y-1 group animate-pop-in relative overflow-hidden cursor-default"
       style={{ borderLeft: `6px solid ${habit.color || '#5D5FEF'}` }}
     >
-      <div className="flex items-center space-x-5 z-10">
+      {/* 
+          Card Body 
+          We apply the onClick here instead of the parent div to prevent 
+          interaction conflicts with the action buttons on the right.
+      */}
+      <div 
+        className="flex items-center space-x-5 z-10 flex-grow cursor-pointer select-none"
+        onClick={() => onViewProgress(habit.id)}
+      > 
         <div className="text-4xl transform transition-transform duration-300 group-hover:scale-110">{habit.emoji}</div>
         <div>
           <div className="flex items-center space-x-2">
@@ -68,11 +105,24 @@ const HabitItem: React.FC<HabitItemProps> = ({ habit, onViewProgress, onShare })
           </div>
         </div>
       </div>
-      <div className="flex items-center space-x-1 sm:space-x-3 z-10">
-        {isHovered && (
-          <div className="flex space-x-1 animate-fade-in">
+
+      {/* Actions & Complete Button */}
+      <div className="flex items-center space-x-1 sm:space-x-3 z-20">
+        
+        {/* 
+            Action Buttons (Share, Chart, Delete)
+            Logic:
+            - Mobile (default): Visible
+            - Desktop (lg): Invisible by default, Visible on Group Hover.
+            - This avoids phantom clicks when buttons are visually hidden.
+        */}
+        <div 
+            className="flex space-x-1 lg:invisible lg:group-hover:visible opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all duration-200"
+            onClick={(e) => e.stopPropagation()}
+        >
             <button
-                onClick={() => onShare(habit)}
+                type="button"
+                onClick={handleShareClick}
                 className="text-gray-400 hover:text-secondary transition-all duration-200 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
                 title="Share with Friends"
             >
@@ -81,7 +131,8 @@ const HabitItem: React.FC<HabitItemProps> = ({ habit, onViewProgress, onShare })
                 </svg>
             </button>
             <button
-                onClick={() => onViewProgress(habit.id)}
+                type="button"
+                onClick={handleViewProgressClick}
                 className="text-gray-400 hover:text-info transition-all duration-200 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
                 title="View Progress"
             >
@@ -91,6 +142,7 @@ const HabitItem: React.FC<HabitItemProps> = ({ habit, onViewProgress, onShare })
                 </svg>
             </button>
             <button
+                type="button"
                 onClick={handleDelete}
                 className="text-gray-400 hover:text-error transition-all duration-200 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
                 title="Delete Habit"
@@ -99,9 +151,11 @@ const HabitItem: React.FC<HabitItemProps> = ({ habit, onViewProgress, onShare })
                 <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" />
                 </svg>
             </button>
-          </div>
-        )}
+        </div>
+
+        {/* Checkmark Button */}
         <button
+          type="button"
           onClick={handleComplete}
           disabled={isCompletedToday}
           className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ease-out relative
@@ -117,8 +171,8 @@ const HabitItem: React.FC<HabitItemProps> = ({ habit, onViewProgress, onShare })
           }}
           aria-label={`Complete habit: ${habit.name}`}
         >
-           {isCompletedToday && (
-              <div className="absolute inset-0 rounded-full animate-ping opacity-20" style={{ backgroundColor: habit.color }}></div>
+           {triggerCelebration && (
+              <div className="absolute inset-0 rounded-full animate-ping opacity-40 pointer-events-none" style={{ backgroundColor: habit.color }}></div>
            )}
           <svg xmlns="http://www.w3.org/2000/svg" className={`h-7 w-7 transition-all duration-300 ${isCompletedToday ? 'scale-100' : 'scale-75 opacity-70 hover:opacity-100'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
