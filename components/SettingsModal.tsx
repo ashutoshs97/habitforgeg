@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useHabits } from '../context/HabitContext';
 import { useAuth } from '../context/AuthContext';
@@ -5,7 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import PremiumModal from './PremiumModal';
 
 // API Configuration
-const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000';
+const API_URL = (import.meta as any).env?.VITE_API_URL || 'https://habitforgeg.onrender.com';
 
 interface SettingsModalProps {
   isOpen: boolean;

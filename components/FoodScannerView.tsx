@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 // API Configuration
-const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000';
+const API_URL = (import.meta as any).env?.VITE_API_URL || 'https://habitforgeg.onrender.com';
 
 interface CalorieLog {
   id: number;
@@ -131,7 +131,6 @@ const FoodScannerView: React.FC = () => {
   return (
     <div className="animate-fade-in">
        <div className="bg-gradient-to-br from-indigo-900 to-purple-900 rounded-3xl shadow-2xl overflow-hidden text-white relative mb-8 p-8 md:p-12">
-          {/* ... (Rest of the UI remains identical, only the fetch logic changed) ... */}
           <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
              <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
                  <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
