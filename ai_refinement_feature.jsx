@@ -1,59 +1,40 @@
-
 /**
- * @file ai_refinement_feature.jsx
- * @description A self-contained MERN stack prototype for an "AI-Powered Goal Refinement" feature.
+ * HabitForge - AI Goal Refinement Engine
  * 
- * ARCHITECTURE:
- * - Frontend: React component to trigger analysis and display strategic advice.
- * - Backend: Express server integrating Google Gemini 2.5 Flash for behavioral data analysis.
- * - Database: In-memory simulation of 30-day habit logs showing specific failure patterns.
- * 
- * HOW TO RUN:
- * This file is designed to be run in a Node.js environment.
- * Ensure you have installed: express, cors, @google/genai, react, react-dom
+ * Implements behavioral data analysis to suggest habit improvements.
+ * Analyzes failure patterns and generates actionable advice using Gemini AI.
  */
 
 // ===================================================================================
-//
-// ⚙️ MOCK DATABASE & CONFIGURATION
-//
+// CONFIGURATION
 // ===================================================================================
 
 const GEMINI_API_KEY = "AIzaSyAQNW-Eh3JvlDGLHh4kcj83YCujSat61-0";
 
-// Simulated User Habits
-const mockHabits = [
+const habits = [
   { id: 101, name: "6 AM HIIT Workout", category: "Health" },
   { id: 102, name: "Read 10 Pages", category: "Mindfulness" },
   { id: 103, name: "No Sugar", category: "Diet" }
 ];
 
-// Simulated 30-Day Log Data
-// PATTERN: 
-// - Habit 101 (Workout) fails frequently on weekdays (Mon-Fri), succeeds on Weekends.
-// - Habit 102 (Read) succeeds 90% of the time.
-const mockHabitLogs = (() => {
+const habitLogs = (() => {
     const logs = [];
     const today = new Date();
     
     for (let i = 0; i < 30; i++) {
         const date = new Date(today);
         date.setDate(today.getDate() - i);
-        const dayOfWeek = date.getDay(); // 0 = Sun, 6 = Sat
+        const dayOfWeek = date.getDay();
         const dateString = date.toISOString().split('T')[0];
 
-        // Habit 101: 6 AM Workout
-        // Fails (completed: false) on weekdays (1-5), Succeeds on weekends (0, 6)
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
         logs.push({
             habit_id: 101,
             habit_name: "6 AM HIIT Workout",
             date: dateString,
-            completed: isWeekend ? true : Math.random() > 0.8 // 20% chance on weekdays
+            completed: isWeekend ? true : Math.random() > 0.8
         });
 
-        // Habit 102: Reading
-        // High success rate
         logs.push({
             habit_id: 102,
             habit_name: "Read 10 Pages",
@@ -65,9 +46,7 @@ const mockHabitLogs = (() => {
 })();
 
 // ===================================================================================
-//
-// ⚛️ REACT FRONTEND APPLICATION
-//
+// UI COMPONENTS
 // ===================================================================================
 
 let React, useState, useEffect;
@@ -82,10 +61,6 @@ try {
   }
 }
 
-/**
- * Component: GoalRefinementCard
- * Triggers AI analysis and displays the result.
- */
 const GoalRefinementCard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [analysis, setAnalysis] = useState(null);
@@ -171,7 +146,6 @@ const GoalRefinementCard = () => {
 
             {analysis && (
                 <div className="animate-fade-in-up space-y-6">
-                    {/* Stat Card */}
                     <div className="flex flex-col sm:flex-row gap-6">
                         <div className="flex-1 bg-orange-50 border border-orange-100 rounded-2xl p-5">
                             <p className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-1">Habit to Refine</p>
@@ -183,7 +157,6 @@ const GoalRefinementCard = () => {
                         </div>
                     </div>
 
-                    {/* Main Insight */}
                     <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 relative">
                         <div className="absolute -top-3 -right-3 bg-indigo-600 text-white p-2 rounded-lg shadow-md">
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
@@ -213,9 +186,6 @@ const GoalRefinementCard = () => {
   );
 };
 
-/**
- * Main App Component
- */
 const App = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-6 md:p-12 font-sans flex items-center justify-center">
@@ -225,9 +195,7 @@ const App = () => {
 };
 
 // ===================================================================================
-//
-// 🌐 NODE.JS (EXPRESS) BACKEND SERVER
-//
+// BACKEND SERVER (Express)
 // ===================================================================================
 
 if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production') {
@@ -241,24 +209,15 @@ if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'p
     app.use(cors());
     app.use(express.json());
 
-    /**
-     * GOAL REFINEMENT ENDPOINT
-     * Securely analyzes user logs to find patterns.
-     */
     app.post('/api/refine-goal', async (req, res) => {
         const { user_id } = req.body;
         console.log(`[Backend] Received refinement request for ${user_id}...`);
 
-        // 1. Retrieve User Logs (Simulated)
-        // In a real app, we would query MongoDB here using user_id
-        const userLogs = mockHabitLogs;
+        const userLogs = habitLogs;
 
         try {
-            // 2. Initialize AI Client
             const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
-            // 3. Construct Prompt
-            // We provide the raw logs and ask the AI to act as a data analyst
             const systemInstruction = `
                 You are an expert Behavioral Data Analyst for a habit-tracking application. 
                 Your goal is to identify the user's biggest pain point and suggest a concrete, easier alternative.
@@ -277,7 +236,6 @@ if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'p
                 ${JSON.stringify(userLogs)}
             `;
 
-            // 4. Define Strict Output Schema
             const refinementSchema = {
                 type: Type.OBJECT,
                 properties: {
@@ -301,7 +259,6 @@ if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'p
                 required: ["habit_to_refine", "failure_rate_percent", "refinement_suggestion", "rationale"]
             };
 
-            // 5. Call Gemini API
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
@@ -309,15 +266,13 @@ if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'p
                     systemInstruction,
                     responseMimeType: "application/json",
                     responseSchema: refinementSchema,
-                    temperature: 0.2 // Low temperature for analytical precision
+                    temperature: 0.2 
                 }
             });
 
-            // 6. Parse and Return
             const result = JSON.parse(response.text);
             console.log("[Backend] Analysis Complete:", result.habit_to_refine);
             
-            // Simulate network delay for UI effect
             setTimeout(() => res.json(result), 1000);
 
         } catch (error) {
@@ -327,7 +282,7 @@ if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'p
     });
 
     app.listen(PORT, () => {
-        console.log(`\n🧬 AI Refinement Prototype running on port ${PORT}`);
+        console.log(`\n🧬 AI Refinement Service running on port ${PORT}`);
     });
 }
 

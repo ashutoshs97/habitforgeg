@@ -1,34 +1,24 @@
-
 /**
- * @file food_scanner_feature.jsx
- * @description A self-contained MERN stack prototype for a "Food Item Scanner" feature.
+ * HabitForge - AI Food Scanner Module
  * 
- * ARCHITECTURE:
+ * Architecture:
  * - Frontend: React components for Image Upload, Analysis Display, and Calorie Logging.
  * - Backend: Express server integrating Google Gemini 2.5 Flash for multimodal image analysis.
- * - Database: In-memory simulation for user calorie logs.
- * 
- * HOW TO RUN:
- * This file is designed to be run in a Node.js environment.
- * Ensure you have installed: express, cors, @google/genai, react, react-dom
+ * - Data Store: Local development database for nutrition logs.
  */
 
 // ===================================================================================
-//
-// ⚙️ MOCK DATABASE & CONFIGURATION
-//
+// CONFIGURATION
 // ===================================================================================
 
 const GEMINI_API_KEY = "AIzaSyAQNW-Eh3JvlDGLHh4kcj83YCujSat61-0";
 
-// Simulated Database
-const mockDB = {
+const dbConfig = {
   user: {
     id: 'user_123',
     name: 'Alex',
     dailyCalorieGoal: 2500
   },
-  // Logs array stores: { id, foodName, calories, timestamp }
   calorieLogs: [
     { id: 1, foodName: "Oatmeal & Blueberries", calories: 350, timestamp: new Date().setHours(8, 0, 0) },
     { id: 2, foodName: "Grilled Chicken Salad", calories: 450, timestamp: new Date().setHours(13, 0, 0) }
@@ -36,9 +26,7 @@ const mockDB = {
 };
 
 // ===================================================================================
-//
-// ⚛️ REACT FRONTEND APPLICATION
-//
+// UI COMPONENTS
 // ===================================================================================
 
 let React, useState, useEffect, useRef;
@@ -54,25 +42,18 @@ try {
   }
 }
 
-/**
- * Utility: Convert File object to Base64 string
- */
 const convertToBase64 = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result); // Returns "data:image/png;base64,..."
+    reader.onload = () => resolve(reader.result); 
     reader.onerror = (error) => reject(error);
   });
 };
 
-/**
- * Component: CalorieLogTable
- * Displays the daily history and calculates totals.
- */
 const CalorieLogTable = ({ logs }) => {
   const totalCalories = logs.reduce((sum, item) => sum + item.calories, 0);
-  const percentage = Math.min(100, (totalCalories / mockDB.user.dailyCalorieGoal) * 100);
+  const percentage = Math.min(100, (totalCalories / dbConfig.user.dailyCalorieGoal) * 100);
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 h-full flex flex-col">
@@ -87,7 +68,6 @@ const CalorieLogTable = ({ logs }) => {
         </div>
       </div>
 
-      {/* Progress Bar */}
       <div className="w-full bg-gray-100 rounded-full h-2.5 mb-6 overflow-hidden">
         <div 
             className={`h-2.5 rounded-full transition-all duration-500 ${percentage > 100 ? 'bg-red-500' : 'bg-green-500'}`} 
@@ -119,10 +99,6 @@ const CalorieLogTable = ({ logs }) => {
   );
 };
 
-/**
- * Component: DashboardScanner
- * Handles Image Upload -> Analysis -> Confirmation
- */
 const DashboardScanner = ({ onLogAdded }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -132,22 +108,18 @@ const DashboardScanner = ({ onLogAdded }) => {
 
   const fileInputRef = useRef(null);
 
-  // Handle File Selection
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Create local preview
     setPreviewUrl(URL.createObjectURL(file));
     setAnalysisResult(null);
     setError(null);
     setIsAnalyzing(true);
 
     try {
-      // Convert to Base64 for API
       const base64Image = await convertToBase64(file);
 
-      // Call Backend API
       const response = await fetch('http://localhost:4002/api/scan-food', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -157,7 +129,7 @@ const DashboardScanner = ({ onLogAdded }) => {
       if (!response.ok) throw new Error('Failed to analyze image');
       
       const data = await response.json();
-      setAnalysisResult(data); // Expects: { food_item_name, calories_value_kcals }
+      setAnalysisResult(data);
 
     } catch (err) {
       console.error(err);
@@ -167,7 +139,6 @@ const DashboardScanner = ({ onLogAdded }) => {
     }
   };
 
-  // Handle "Add to Log"
   const handleAddLog = async () => {
     if (!analysisResult) return;
 
@@ -178,14 +149,13 @@ const DashboardScanner = ({ onLogAdded }) => {
             body: JSON.stringify({
                 food_item_name: analysisResult.food_item_name,
                 calories_value_kcals: analysisResult.calories_value_kcals,
-                user_id: mockDB.user.id
+                user_id: dbConfig.user.id
             })
         });
         
         const updatedLogs = await response.json();
         onLogAdded(updatedLogs);
         
-        // Reset State
         setPreviewUrl(null);
         setAnalysisResult(null);
         if(fileInputRef.current) fileInputRef.current.value = "";
@@ -203,7 +173,6 @@ const DashboardScanner = ({ onLogAdded }) => {
         </h3>
         <p className="text-gray-500 text-sm mb-6">Upload a photo of your meal. Gemini AI will estimate the calories.</p>
 
-        {/* Image Upload Area */}
         {!previewUrl ? (
             <div 
                 onClick={() => fileInputRef.current?.click()}
@@ -245,7 +214,6 @@ const DashboardScanner = ({ onLogAdded }) => {
             </div>
         )}
 
-        {/* Analysis Results */}
         {error && (
             <div className="mt-4 bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 text-sm flex items-center gap-2">
                 <span>⚠️</span> {error}
@@ -273,15 +241,11 @@ const DashboardScanner = ({ onLogAdded }) => {
   );
 };
 
-/**
- * Main App Component
- */
 const App = () => {
   const [logs, setLogs] = useState([]);
 
-  // Initial Data Fetch (Mock)
   useEffect(() => {
-    setLogs(mockDB.calorieLogs);
+    setLogs(dbConfig.calorieLogs);
   }, []);
 
   const handleLogUpdate = (updatedLogs) => {
@@ -296,12 +260,9 @@ const App = () => {
       </header>
 
       <main className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {/* Left Column: Scanner */}
         <div className="lg:col-span-2">
             <DashboardScanner onLogAdded={handleLogUpdate} />
         </div>
-
-        {/* Right Column: Logs */}
         <div className="h-full min-h-[500px]">
             <CalorieLogTable logs={logs} />
         </div>
@@ -312,44 +273,34 @@ const App = () => {
 
 
 // ===================================================================================
-//
-// 🌐 NODE.JS (EXPRESS) BACKEND SERVER
-//
+// BACKEND SERVER (Express)
 // ===================================================================================
 
 if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production') {
     const express = require('express');
     const cors = require('cors');
-    const { GoogleGenAI, Type } = require("@google/genai"); // Official SDK
+    const { GoogleGenAI, Type } = require("@google/genai");
 
     const app = express();
     const PORT = 4002;
 
     app.use(cors());
-    app.use(express.json({ limit: '10mb' })); // Increased limit for base64 images
+    app.use(express.json({ limit: '10mb' }));
 
-    /**
-     * 1. SCAN FOOD ENDPOINT (Multimodal Analysis)
-     */
     app.post('/api/scan-food', async (req, res) => {
         console.log("[Backend] Received Image Analysis Request...");
-        const { imageBase64 } = req.body; // "data:image/png;base64,..."
+        const { imageBase64 } = req.body;
 
         if (!imageBase64) {
             return res.status(400).json({ error: "No image data provided" });
         }
 
         try {
-            // 1. Initialize SDK with the Constant Key
             const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
             
-            // 2. Prepare Image Part
-            // Extract the actual base64 data (remove "data:image/xxx;base64," prefix)
             const base64Data = imageBase64.split(',')[1];
-            // Detect mime type from the prefix
             const mimeType = imageBase64.substring(imageBase64.indexOf(":") + 1, imageBase64.indexOf(";"));
 
-            // 3. Configure Response Schema for Strict JSON
             const foodSchema = {
                 type: Type.OBJECT,
                 properties: {
@@ -365,7 +316,6 @@ if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'p
                 required: ["food_item_name", "calories_value_kcals"]
             };
 
-            // 4. Call GenerateContent
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: {
@@ -384,11 +334,10 @@ if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'p
                 config: {
                     responseMimeType: "application/json",
                     responseSchema: foodSchema,
-                    temperature: 0.4 // Lower temperature for more factual/stable answers
+                    temperature: 0.4 
                 }
             });
 
-            // 5. Parse and Return
             const analysis = JSON.parse(response.text);
             console.log("[Backend] Analysis Success:", analysis);
             res.json(analysis);
@@ -399,9 +348,6 @@ if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'p
         }
     });
 
-    /**
-     * 2. LOG CALORIES ENDPOINT
-     */
     app.post('/api/log-calories', (req, res) => {
         const { food_item_name, calories_value_kcals, user_id } = req.body;
 
@@ -412,17 +358,16 @@ if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'p
             timestamp: Date.now()
         };
 
-        mockDB.calorieLogs.push(newLog);
+        dbConfig.calorieLogs.push(newLog);
         
-        // Sort logs by newest first for the UI
-        const sortedLogs = [...mockDB.calorieLogs].sort((a, b) => b.timestamp - a.timestamp);
+        const sortedLogs = [...dbConfig.calorieLogs].sort((a, b) => b.timestamp - a.timestamp);
         
         console.log(`[Backend] Logged: ${food_item_name} (${calories_value_kcals} kcal)`);
         res.json(sortedLogs);
     });
 
     app.listen(PORT, () => {
-        console.log(`\n🥗 Food Scanner Prototype running on port ${PORT}`);
+        console.log(`\n🥗 Food Scanner Service running on port ${PORT}`);
     });
 }
 

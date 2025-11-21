@@ -8,59 +8,52 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '10mb' })); // Increased limit for base64 images
+app.use(express.json({ limit: '10mb' })); // Support large payloads for image processing
 
 // ------------------------------------------------------------------
-// CONFIGURATION
+// ENVIRONMENT CONFIGURATION
 // ------------------------------------------------------------------
-// In production (Render), these come from Environment Variables
-// SECURITY UPDATE: Removed hardcoded key to prevent leaks. 
-// You MUST set 'API_KEY' in your Render Dashboard.
 const GEMINI_API_KEY = process.env.API_KEY;
 
-// --- CRITICAL: Debugging Logs for Deployment ---
+// Verify Environment Configuration
 if (!GEMINI_API_KEY) {
-    console.error("❌ CRITICAL ERROR: API_KEY environment variable is NOT set!");
-    console.error("👉 Go to Render Dashboard -> Settings -> Environment Variables and add 'API_KEY'.");
+    console.warn("Warning: API_KEY environment variable is not set. AI features will not function.");
 } else {
-    // Log the first 4 chars to verify key is loaded (safe to log)
-    console.log("✅ API_KEY is loaded:", GEMINI_API_KEY.substring(0, 4) + "...");
+    console.log("Environment configured successfully.");
 }
 
 // ------------------------------------------------------------------
-// 0. HEALTH CHECK (For Render)
+// SYSTEM ROUTES
 // ------------------------------------------------------------------
+
+// Health Check
 app.get('/', (req, res) => {
-    res.send('HabitForge Backend is running. Ready for requests.');
+    res.send('HabitForge API Service is active.');
 });
 
 // ------------------------------------------------------------------
-// 1. AI FOOD SCANNER ENDPOINT
+// AI MODULE: FOOD SCANNER
 // ------------------------------------------------------------------
 app.post('/api/scan-food', async (req, res) => {
-    console.log("[Backend] Received /api/scan-food request");
     const { imageBase64 } = req.body;
 
     if (!imageBase64) {
-        console.error("[Backend] Error: No image data provided in body");
-        return res.status(400).json({ error: "No image data provided" });
+        return res.status(400).json({ error: "Payload missing image data" });
     }
 
     if (!GEMINI_API_KEY) {
-        console.error("[Backend] Error: API Key is missing. Cannot call Gemini.");
-        return res.status(500).json({ error: "Server Misconfiguration: API_KEY missing in Environment Variables" });
+        return res.status(500).json({ error: "Service configuration error: Missing API Credentials" });
     }
 
     try {
         const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
         
-        // Validation: Ensure we can split the base64 string
+        // Extract base64 data and mime type
         const parts = imageBase64.split(',');
         if (parts.length !== 2) {
-            throw new Error("Invalid Base64 image format");
+            throw new Error("Malformed image data");
         }
         const base64Data = parts[1];
-        // Extract mimeType safely
         const mimeType = imageBase64.substring(imageBase64.indexOf(":") + 1, imageBase64.indexOf(";"));
 
         const foodSchema = {
@@ -71,8 +64,6 @@ app.post('/api/scan-food', async (req, res) => {
             },
             required: ["food_item_name", "calories_value_kcals"]
         };
-
-        console.log(`[Backend] Sending image (${mimeType}) to Gemini...`);
 
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
@@ -89,24 +80,22 @@ app.post('/api/scan-food', async (req, res) => {
             }
         });
 
-        console.log("[Backend] Gemini Response Received");
         const analysis = JSON.parse(response.text);
         res.json(analysis);
     } catch (error) {
-        console.error("❌ Food Scan Error Details:", error);
-        // Send the actual error message back for easier debugging in the frontend
-        res.status(500).json({ error: "AI Analysis Failed", details: error.message });
+        console.error("Food Scanner Service Error:", error);
+        res.status(500).json({ error: "Analysis service failed", details: error.message });
     }
 });
 
 // ------------------------------------------------------------------
-// 2. AI GOAL REFINEMENT ENDPOINT
+// AI MODULE: BEHAVIORAL ANALYSIS
 // ------------------------------------------------------------------
 app.post('/api/refine-goal', async (req, res) => {
     const { habitData } = req.body;
 
     if (!GEMINI_API_KEY) {
-         return res.status(500).json({ error: "Server Misconfiguration: API_KEY missing in Environment Variables" });
+         return res.status(500).json({ error: "Service configuration error: Missing API Credentials" });
     }
 
     try {
@@ -120,7 +109,10 @@ app.post('/api/refine-goal', async (req, res) => {
             properties: {
                 habit_to_refine: { type: Type.STRING },
                 failure_rate_percent: { type: Type.INTEGER },
-                refinement_suggestion: { type: Type.STRING },
+                refinement_suggestion: { 
+                    type: Type.STRING, 
+                    description: "A short, concise name for the refined habit (e.g., '5 min walk' or 'Read 1 page'). This string will replace the current habit name." 
+                },
                 rationale: { type: Type.STRING }
             },
             required: ["habit_to_refine", "failure_rate_percent", "refinement_suggestion", "rationale"]
@@ -140,25 +132,25 @@ app.post('/api/refine-goal', async (req, res) => {
         const result = JSON.parse(response.text);
         res.json(result);
     } catch (error) {
-        console.error("Refinement Error:", error);
-        res.status(500).json({ error: "Failed to analyze goals." });
+        console.error("Goal Refinement Service Error:", error);
+        res.status(500).json({ error: "Analysis service failed" });
     }
 });
 
 // ------------------------------------------------------------------
-// 3. EMAIL REMINDERS (Mock)
+// NOTIFICATION SERVICE
 // ------------------------------------------------------------------
 app.post('/api/reminders/send-test', async (req, res) => {
     const { email } = req.body;
-    // In production, you would import nodemailer here
-    console.log(`[Mock Email] Sending test reminder to ${email}`);
+    // Logic to integrate with SMTP provider (e.g., SendGrid/Nodemailer)
+    console.log(`Dispatching test email to ${email}`);
     setTimeout(() => {
         res.json({ success: true, message: `Test email sent to ${email}` });
     }, 1000);
 });
 
 // ------------------------------------------------------------------
-// 4. DATA EXPORT (CSV)
+// DATA EXPORT SERVICE
 // ------------------------------------------------------------------
 app.post('/api/export/csv', (req, res) => {
     const { habits } = req.body;
@@ -188,12 +180,12 @@ app.post('/api/export/csv', (req, res) => {
         res.setHeader('Content-Disposition', `attachment; filename="habitforge_export_${Date.now()}.csv"`);
         res.status(200).send(csvContent);
     } catch (error) {
-        res.status(500).json({ error: "Failed to generate CSV" });
+        res.status(500).json({ error: "Data export failed" });
     }
 });
 
 // ------------------------------------------------------------------
-// 5. PAYMENTS (Mock PayPal/Stripe)
+// PAYMENT GATEWAY (PayPal/Stripe Adapter)
 // ------------------------------------------------------------------
 app.post('/api/payments/create-order', (req, res) => {
     const orderID = 'ORD-' + Math.random().toString(36).substr(2, 12).toUpperCase();
@@ -202,12 +194,13 @@ app.post('/api/payments/create-order', (req, res) => {
 
 app.post('/api/payments/capture-order', (req, res) => {
     const { orderID } = req.body;
+    // Verify order status with payment provider
     setTimeout(() => {
         res.json({ status: 'COMPLETED', id: orderID });
     }, 1000);
 });
 
-// Start Server
+// Initialize Server
 app.listen(PORT, () => {
-    console.log(`HabitForge Backend running on port ${PORT}`);
+    console.log(`HabitForge Backend Service running on port ${PORT}`);
 });

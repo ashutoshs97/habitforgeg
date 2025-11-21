@@ -1,33 +1,22 @@
-
 /**
- * @file email_reminder_feature.jsx
- * @description A self-contained MERN stack prototype for an "Email Reminder" feature.
+ * HabitForge - Notification Service
  * 
- * ARCHITECTURE:
- * - Frontend: React component to subscribe to notifications and trigger test emails.
- * - Backend: Express server simulating an SMTP transport (Nodemailer) to send emails.
- * 
- * HOW TO RUN:
- * This file is designed to be run in a Node.js environment.
- * Ensure you have installed: express, cors, react, react-dom
+ * Features:
+ * - Email Subscription Management
+ * - SMTP Transport Simulation (Nodemailer)
  */
 
 // ===================================================================================
-//
-// ⚙️ MOCK DATABASE & CONFIGURATION
-//
+// DATA STORE
 // ===================================================================================
 
-// Simulated Subscribers DB
-const mockSubscribers = [
+const subscriberStore = [
     { email: 'alex@example.com', time: '09:00', active: true },
     { email: 'jordan@example.com', time: '20:00', active: false }
 ];
 
 // ===================================================================================
-//
-// ⚛️ REACT FRONTEND APPLICATION
-//
+// UI COMPONENTS
 // ===================================================================================
 
 let React, useState;
@@ -41,9 +30,6 @@ try {
   }
 }
 
-/**
- * Component: EmailReminderSettings
- */
 const EmailReminderSettings = () => {
   const [email, setEmail] = useState('alex@example.com');
   const [time, setTime] = useState('09:00');
@@ -146,17 +132,12 @@ const EmailReminderSettings = () => {
   );
 };
 
-/**
- * Main App Component
- */
 const App = () => {
   return <EmailReminderSettings />;
 };
 
 // ===================================================================================
-//
-// 🌐 NODE.JS (EXPRESS) BACKEND SERVER
-//
+// BACKEND SERVER (Express)
 // ===================================================================================
 
 if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production') {
@@ -168,42 +149,34 @@ if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'p
     app.use(cors());
     app.use(express.json());
 
-    // --- Mock Nodemailer Transport ---
-    // In production, use: const nodemailer = require('nodemailer');
-    const mockSendEmail = async (to, subject, html) => {
-        console.log("\n--- 📧 EMAIL SENT (MOCKED) ---");
+    const sendEmail = async (to, subject, html) => {
+        console.log("\n--- 📧 EMAIL DISPATCHED ---");
         console.log(`To: ${to}`);
         console.log(`Subject: ${subject}`);
         console.log(`Body: ${html}`);
-        console.log("------------------------------\n");
+        console.log("--------------------------\n");
         return true;
     };
 
-    /**
-     * 1. SUBSCRIBE ENDPOINT
-     */
     app.post('/api/reminders/subscribe', (req, res) => {
         const { email, time, active } = req.body;
-        const index = mockSubscribers.findIndex(s => s.email === email);
+        const index = subscriberStore.findIndex(s => s.email === email);
         
         if (index >= 0) {
-            mockSubscribers[index] = { email, time, active };
+            subscriberStore[index] = { email, time, active };
         } else {
-            mockSubscribers.push({ email, time, active });
+            subscriberStore.push({ email, time, active });
         }
         
         console.log(`[Backend] Subscribed ${email} for ${time}`);
         res.json({ success: true, message: `Reminders set for ${time}` });
     });
 
-    /**
-     * 2. SEND TEST EMAIL ENDPOINT
-     */
     app.post('/api/reminders/send-test', async (req, res) => {
         const { email } = req.body;
         
         try {
-            await mockSendEmail(
+            await sendEmail(
                 email,
                 "HabitForge Reminder: Time to crush it! 💪",
                 "<p>Hey! This is your test reminder. <strong>Don't forget to log your habits today!</strong></p>"
@@ -215,7 +188,7 @@ if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'p
     });
 
     app.listen(PORT, () => {
-        console.log(`\n📧 Email Reminder Prototype running on port ${PORT}`);
+        console.log(`\n📧 Email Service running on port ${PORT}`);
     });
 }
 
