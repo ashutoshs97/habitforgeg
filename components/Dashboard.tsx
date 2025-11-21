@@ -12,6 +12,7 @@ import PremiumModal from './PremiumModal';
 import FriendsView from './FriendsView';
 import PremiumView from './PremiumView';
 import FoodScannerView from './FoodScannerView';
+import GoalRefinementView from './GoalRefinementView';
 import CalorieWidget from './CalorieWidget';
 import PointTrackerWidget from './PointTrackerWidget';
 import TopStreakWidget from './TopStreakWidget';
@@ -19,7 +20,7 @@ import { useHabits } from '../context/HabitContext';
 import type { Habit, Notification } from '../types';
 
 const Dashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'my-habits' | 'shared' | 'friends' | 'premium' | 'food-scanner'>('my-habits');
+  const [activeTab, setActiveTab] = useState<'my-habits' | 'shared' | 'friends' | 'premium' | 'food-scanner' | 'refinement'>('my-habits');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
@@ -56,10 +57,11 @@ const Dashboard: React.FC = () => {
       { id: 'shared', label: 'Shared', icon: '👥' },
       { id: 'friends', label: 'Friends', icon: '👋' },
       { id: 'food-scanner', label: 'Food Scanner', icon: '📸' },
+      { id: 'refinement', label: 'AI Coach', icon: '🧬' },
       { id: 'premium', label: 'Premium', icon: '💎' },
   ] as const;
 
-  const isFullWidthTab = activeTab === 'premium' || activeTab === 'food-scanner';
+  const isFullWidthTab = activeTab === 'premium' || activeTab === 'food-scanner' || activeTab === 'refinement';
 
   return (
     <div className="min-h-screen bg-base-200 dark:bg-neutral">
@@ -148,6 +150,10 @@ const Dashboard: React.FC = () => {
 
                   {activeTab === 'food-scanner' && (
                       <FoodScannerView />
+                  )}
+
+                  {activeTab === 'refinement' && (
+                      <GoalRefinementView />
                   )}
                   
                   {activeTab === 'premium' && (

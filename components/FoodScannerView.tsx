@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { GoogleGenAI, Type } from '@google/genai';
+
+// API Configuration
+const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000';
 
 interface CalorieLog {
   id: number;
@@ -75,52 +77,18 @@ const FoodScannerView: React.FC = () => {
 
     try {
       const base64Image = await convertToBase64(file);
-      const base64Data = base64Image.split(',')[1];
-      const mimeType = base64Image.substring(base64Image.indexOf(":") + 1, base64Image.indexOf(";"));
 
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: {
-          parts: [
-            {
-              inlineData: {
-                mimeType: mimeType,
-                data: base64Data
-              }
-            },
-            {
-              text: "Analyze this image. Identify the main food item and estimate the calorie content for the portion displayed."
-            }
-          ]
-        },
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              food_item_name: { 
-                  type: Type.STRING,
-                  description: "The generic name of the food item identified in the image."
-              },
-              calories_value_kcals: { 
-                  type: Type.INTEGER,
-                  description: "The estimated calorie count for the portion shown."
-              }
-            },
-            required: ["food_item_name", "calories_value_kcals"]
-          },
-          temperature: 0.4
-        }
+      // Call the Unified Backend
+      const response = await fetch(`${API_URL}/api/scan-food`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64: base64Image })
       });
 
-      if (response.text) {
-        const data = JSON.parse(response.text);
-        setAnalysisResult(data);
-      } else {
-        throw new Error("No response text from AI");
-      }
+      if (!response.ok) throw new Error("Failed to analyze image via backend");
+
+      const data = await response.json();
+      setAnalysisResult(data);
 
     } catch (err: any) {
       console.error(err);
@@ -163,6 +131,7 @@ const FoodScannerView: React.FC = () => {
   return (
     <div className="animate-fade-in">
        <div className="bg-gradient-to-br from-indigo-900 to-purple-900 rounded-3xl shadow-2xl overflow-hidden text-white relative mb-8 p-8 md:p-12">
+          {/* ... (Rest of the UI remains identical, only the fetch logic changed) ... */}
           <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
              <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
                  <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">

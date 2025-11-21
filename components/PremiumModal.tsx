@@ -1,6 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useHabits } from '../context/HabitContext';
+
+// API Configuration
+const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000';
 
 interface PremiumModalProps {
   isOpen: boolean;
@@ -18,6 +20,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ isOpen, onClose }) => {
   const [name, setName] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -28,6 +31,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ isOpen, onClose }) => {
           setCvc('');
           setName('');
           setIsProcessing(false);
+          setErrorMessage('');
       }
   }, [isOpen]);
 
@@ -53,20 +57,43 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ isOpen, onClose }) => {
       }
   };
 
-  const handlePay = (e: React.FormEvent) => {
+  const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
+    setErrorMessage('');
 
-    // Simulate API processing time
-    setTimeout(() => {
-        setIsProcessing(false);
+    try {
+        // 1. Create Order
+        const createRes = await fetch(`${API_URL}/api/payments/create-order`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: '9.99', currency: 'USD' })
+        });
+        if (!createRes.ok) throw new Error("Failed to create order");
+        const orderData = await createRes.json();
+
+        // 2. Capture Order (Simulated Delay included in backend)
+        const captureRes = await fetch(`${API_URL}/api/payments/capture-order`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderID: orderData.id })
+        });
+        if (!captureRes.ok) throw new Error("Failed to capture payment");
+        
         setPaymentStatus('success');
         
         // Grant Premium Status
         setTimeout(() => {
             dispatch({ type: 'UPGRADE_TO_PREMIUM' });
         }, 1000);
-    }, 2000);
+
+    } catch (error) {
+        console.error(error);
+        setPaymentStatus('error');
+        setErrorMessage("Transaction failed. Please try again.");
+    } finally {
+        setIsProcessing(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -148,6 +175,12 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ isOpen, onClose }) => {
                         </h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Enter your details to upgrade.</p>
                     </div>
+                    
+                    {errorMessage && (
+                        <div className="bg-red-50 border border-red-100 text-red-600 p-3 rounded-lg mb-4 text-sm">
+                            {errorMessage}
+                        </div>
+                    )}
 
                     <form onSubmit={handlePay} className="space-y-5">
                         <div>
@@ -241,7 +274,7 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ isOpen, onClose }) => {
                     {/* Test Credentials Hint */}
                     <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800">
                         <p className="text-xs text-blue-600 dark:text-blue-300 text-center">
-                            <strong>Demo Mode:</strong> You can use any non-empty values to test the upgrade flow. No real charge will be made.
+                            <strong>Demo Mode:</strong> Backend Connected. No real charge will be made.
                         </p>
                     </div>
                 </div>

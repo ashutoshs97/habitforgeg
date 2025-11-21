@@ -1,9 +1,11 @@
-
 import React, { useState } from 'react';
 import { useHabits } from '../context/HabitContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import PremiumModal from './PremiumModal';
+
+// API Configuration
+const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -16,6 +18,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     const { currentUser } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
+    const [isSendingEmail, setIsSendingEmail] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
 
     if (!isOpen) return null;
 
@@ -33,42 +37,62 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         }
     };
 
-    const handleExportData = () => {
-        const { habits } = state;
-        
-        // CSV Header
-        let csvContent = "Date,Habit Name,Type,Emoji,Current Streak\n";
-        
-        const rows: string[] = [];
-        
-        habits.forEach(habit => {
-            habit.completionHistory.forEach(isoDate => {
-                const date = new Date(isoDate).toISOString().split('T')[0]; // YYYY-MM-DD
-                const row = [
-                    date,
-                    `"${habit.name.replace(/"/g, '""')}"`, // Escape quotes
-                    habit.type,
-                    habit.emoji,
-                    habit.streak
-                ].join(",");
-                rows.push(row);
+    const handleExportData = async () => {
+        setIsExporting(true);
+        try {
+            const { habits } = state;
+            
+            const response = await fetch(`${API_URL}/api/export/csv`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ habits })
             });
-        });
-        
-        // Sort by date descending
-        rows.sort((a, b) => b.localeCompare(a));
-        
-        csvContent += rows.join("\n");
-        
-        // Trigger Download
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", `habit_forge_data_${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+
+            if (!response.ok) throw new Error("Export failed");
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `habitforge_export_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+        } catch (error) {
+            console.error("Export error:", error);
+            alert("Failed to download data. Please try again later.");
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    const handleSendTestEmail = async () => {
+        if (!settings.emailNotifs) {
+            alert("Please enable Email Digests first.");
+            return;
+        }
+        setIsSendingEmail(true);
+        try {
+            const response = await fetch(`${API_URL}/api/reminders/send-test`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: currentUser?.email })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                alert(`Test reminder sent to ${currentUser?.email}!`);
+            } else {
+                throw new Error("Failed to send");
+            }
+        } catch (error) {
+            console.error("Email error:", error);
+            alert("Could not send test email. Ensure backend is running.");
+        } finally {
+            setIsSendingEmail(false);
+        }
     };
 
     return (
@@ -181,6 +205,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                  <div>
                                      <p className="font-medium text-neutral dark:text-gray-200">Email Digests</p>
                                      <p className="text-xs text-gray-500 dark:text-gray-400">Weekly summary of your progress</p>
+                                     {settings.emailNotifs && (
+                                         <button 
+                                            onClick={handleSendTestEmail}
+                                            disabled={isSendingEmail}
+                                            className="text-xs text-primary hover:text-primary-focus underline mt-1 disabled:opacity-50"
+                                         >
+                                             {isSendingEmail ? 'Sending...' : 'Send Test Email'}
+                                         </button>
+                                     )}
                                  </div>
                                  <button 
                                     type="button"
@@ -272,12 +305,25 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                             <button 
                                 type="button"
                                 onClick={handleExportData}
-                                className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition font-medium text-neutral dark:text-white flex items-center gap-2"
+                                disabled={isExporting}
+                                className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition font-medium text-neutral dark:text-white flex items-center gap-2 disabled:opacity-50"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                </svg>
-                                Download CSV
+                                {isExporting ? (
+                                    <>
+                                        <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span>Exporting...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                        </svg>
+                                        <span>Download CSV</span>
+                                    </>
+                                )}
                             </button>
                         </div>
                     </section>
