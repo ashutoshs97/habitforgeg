@@ -1,78 +1,449 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface LandingPageProps {
   onSignIn: () => void;
   onSignUp: () => void;
 }
 
-const FeatureCard: React.FC<{ icon: string; title: string; children: React.ReactNode }> = ({ icon, title, children }) => (
-  <div className="bg-white dark:bg-neutral-focus p-8 rounded-2xl shadow-lg transform hover:scale-105 transition-transform duration-300 animate-slide-in-up">
-    <div className="text-5xl mb-5 text-primary">{icon}</div>
-    <h3 className="text-2xl font-bold text-neutral dark:text-white mb-3">{title}</h3>
-    <p className="text-base-content dark:text-gray-400 leading-relaxed">{children}</p>
+const FeatureCard: React.FC<{ icon: string; title: string; description: string; delay: string }> = ({ icon, title, description, delay }) => (
+  <div 
+    className="group bg-white dark:bg-neutral-focus p-8 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:-translate-y-1"
+    style={{ animationDelay: delay }}
+  >
+    <div className="w-14 h-14 bg-primary/10 dark:bg-primary/20 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform duration-300 text-primary">
+      {icon}
+    </div>
+    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">{title}</h3>
+    <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{description}</p>
   </div>
 );
 
+const StatItem: React.FC<{ value: string; label: string }> = ({ value, label }) => (
+  <div className="text-center">
+    <div className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary mb-1">
+      {value}
+    </div>
+    <div className="text-sm text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">{label}</div>
+  </div>
+);
+
+const PricingCard: React.FC<{ 
+    title: string; 
+    price: string; 
+    features: string[]; 
+    isPopular?: boolean; 
+    buttonText: string;
+    onClick: () => void;
+    variant: 'outline' | 'solid' 
+}> = ({ title, price, features, isPopular, buttonText, onClick, variant }) => (
+    <div className={`relative p-8 rounded-3xl flex flex-col h-full transition-all duration-300 hover:-translate-y-2 ${
+        variant === 'solid' 
+            ? 'bg-neutral-900 text-white shadow-2xl ring-4 ring-primary/20' 
+            : 'bg-white dark:bg-neutral-focus text-gray-900 dark:text-white shadow-lg border border-gray-100 dark:border-gray-700'
+    }`}>
+        {isPopular && (
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-primary to-secondary text-white text-xs font-bold uppercase tracking-widest py-1.5 px-4 rounded-full shadow-lg">
+                Most Popular
+            </div>
+        )}
+        <h3 className={`text-xl font-bold mb-2 ${variant === 'solid' ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{title}</h3>
+        <div className="mb-6">
+            <span className="text-4xl font-extrabold">{price}</span>
+            {price !== 'Free' && <span className={`text-sm font-medium ${variant === 'solid' ? 'text-gray-400' : 'text-gray-500'}`}>/month</span>}
+        </div>
+        <ul className="space-y-4 mb-8 flex-1">
+            {features.map((feature, i) => (
+                <li key={i} className="flex items-start gap-3 text-sm">
+                    <svg className={`w-5 h-5 flex-shrink-0 ${variant === 'solid' ? 'text-primary' : 'text-green-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className={variant === 'solid' ? 'text-gray-300' : 'text-gray-600 dark:text-gray-300'}>{feature}</span>
+                </li>
+            ))}
+        </ul>
+        <button 
+            onClick={onClick}
+            className={`w-full py-3 rounded-xl font-bold transition-all ${
+                variant === 'solid' 
+                    ? 'bg-white text-neutral-900 hover:bg-gray-100' 
+                    : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'
+            }`}
+        >
+            {buttonText}
+        </button>
+    </div>
+);
+
 const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onSignUp }) => {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-base-200 dark:bg-neutral text-base-content dark:text-gray-300">
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary via-purple-500 to-secondary dark:from-primary-focus dark:to-secondary">
-        {/* Dark overlay for better text contrast in light/dark modes */}
-        <div className="absolute inset-0 bg-black/10 dark:bg-black/30"></div>
-        
-        <div className="relative container mx-auto px-6 py-24 md:py-32 text-center text-white">
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-4 animate-fade-in drop-shadow-lg">Welcome to HabitForge</h1>
-          <p className="text-xl md:text-2xl max-w-3xl mx-auto mb-12 animate-fade-in text-white/90" style={{ animationDelay: '0.2s' }}>
-            Build good habits. Break bad ones. Gamify your self-improvement journey.
-          </p>
-          <div 
-            className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6 animate-fade-in"
-            style={{ animationDelay: '0.4s' }}
-          >
-            <button
-              onClick={onSignUp}
-              className="bg-white text-primary font-bold py-4 px-10 rounded-full text-lg shadow-2xl transform hover:scale-110 transition-transform duration-300 w-full sm:w-auto"
-            >
-              Get Started for Free
-            </button>
-             <button
+    <div className="min-h-screen bg-white dark:bg-neutral text-gray-900 dark:text-gray-100 font-sans selection:bg-primary selection:text-white overflow-x-hidden !scroll-smooth">
+      
+      {/* Navigation */}
+      <nav 
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
+          isScrolled 
+            ? 'bg-white/80 dark:bg-neutral-focus/80 backdrop-blur-lg py-4 shadow-sm border-gray-200/50 dark:border-gray-700/50' 
+            : 'bg-transparent py-6 border-transparent'
+        }`}
+      >
+        <div className="container mx-auto px-6 flex justify-between items-center">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            <div className="w-8 h-8 bg-gradient-to-tr from-primary to-secondary rounded-lg"></div>
+            <span className="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">HabitForge</span>
+          </div>
+          
+          <div className="hidden md:flex items-center space-x-8 font-medium text-sm">
+            <a href="#features" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">Features</a>
+            <a href="#how-it-works" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">Methodology</a>
+            <a href="#pricing" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">Premium</a>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            <button 
               onClick={onSignIn}
-              className="bg-transparent border-2 border-white text-white font-bold py-4 px-10 rounded-full text-lg shadow-2xl transform hover:scale-110 hover:bg-white hover:bg-opacity-20 transition-all duration-300 w-full sm:w-auto"
+              className="text-gray-600 dark:text-gray-300 hover:text-primary font-semibold text-sm transition-colors"
             >
               Sign In
             </button>
+            <button 
+              onClick={onSignUp}
+              className="bg-primary hover:bg-primary-focus text-white px-5 py-2.5 rounded-full font-bold text-sm shadow-lg shadow-primary/25 transition-all hover:scale-105 active:scale-95"
+            >
+              Get Started
+            </button>
           </div>
         </div>
+      </nav>
 
-        {/* Wave shape at the bottom for a smooth transition */}
-        <div className="absolute bottom-0 left-0 right-0 translate-y-1 text-base-200 dark:text-neutral">
-            <svg viewBox="0 0 1440 120" className="w-full h-auto fill-current block" preserveAspectRatio="none">
-                <path d="M0,64L80,69.3C160,75,320,85,480,80C640,75,800,53,960,48C1120,43,1280,53,1360,58.7L1440,64L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path>
-            </svg>
+      {/* Hero Section */}
+      <header className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+        {/* Background Decorative Blobs */}
+        <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-primary/10 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-pulse dark:bg-primary/20"></div>
+        <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-secondary/10 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-pulse dark:bg-secondary/20" style={{ animationDelay: '2s' }}></div>
+
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            
+            {/* Hero Content */}
+            <div className="lg:w-1/2 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 dark:bg-primary/20 text-primary font-bold text-xs uppercase tracking-widest mb-6 border border-primary/10 animate-fade-in">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                </span>
+                Now with AI Coaching
+              </div>
+              
+              <h1 className="text-5xl lg:text-7xl font-extrabold text-gray-900 dark:text-white leading-[1.1] mb-6 animate-slide-in-up">
+                Forge Habits That <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Actually Stick.</span>
+              </h1>
+              
+              <p className="text-xl text-gray-600 dark:text-gray-300 mb-10 leading-relaxed max-w-2xl mx-auto lg:mx-0 animate-slide-in-up" style={{ animationDelay: '0.1s' }}>
+                Combine the power of gamification, social accountability, and AI analysis to break bad habits and build a better you.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
+                <button 
+                  onClick={onSignUp}
+                  className="w-full sm:w-auto px-8 py-4 bg-primary hover:bg-primary-focus text-white rounded-full font-bold text-lg shadow-xl shadow-primary/30 transition-all hover:-translate-y-1"
+                >
+                  Start Forging Free
+                </button>
+                <button 
+                  onClick={onSignIn}
+                  className="w-full sm:w-auto px-8 py-4 bg-white dark:bg-neutral-focus border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white rounded-full font-bold text-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+                >
+                  Log In
+                </button>
+              </div>
+
+              <div className="mt-10 flex items-center justify-center lg:justify-start gap-8 text-sm font-medium text-gray-500 dark:text-gray-400 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                  No Credit Card
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                  Free Tier Forever
+                </div>
+              </div>
+            </div>
+
+            {/* Hero Visual / Mockup */}
+            <div className="lg:w-1/2 relative animate-pop-in" style={{ animationDelay: '0.3s' }}>
+              <div className="relative z-10 bg-white dark:bg-neutral-focus rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 transform rotate-2 hover:rotate-0 transition-all duration-500">
+                {/* Fake Dashboard UI */}
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <div className="h-2 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                    <div className="h-2 w-20 bg-gray-100 dark:bg-gray-800 rounded"></div>
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800"></div>
+                </div>
+                
+                <div className="space-y-4">
+                  {[
+                    { name: "Morning Run", streak: 12, color: "bg-orange-500" },
+                    { name: "Read 30 Mins", streak: 45, color: "bg-blue-500" },
+                    { name: "Meditation", streak: 8, color: "bg-purple-500" }
+                  ].map((habit, i) => (
+                    <div key={i} className="flex items-center p-4 rounded-2xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-gray-700/50">
+                      <div className={`w-12 h-12 rounded-xl ${habit.color} opacity-20 mr-4`}></div>
+                      <div className="flex-1">
+                        <div className="h-2 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                        <div className="h-1.5 w-16 bg-gray-100 dark:bg-gray-800 rounded"></div>
+                      </div>
+                      <div className="px-3 py-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm text-xs font-bold text-gray-600 dark:text-gray-300">
+                        🔥 {habit.streak}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Floating Elements */}
+                <div className="absolute -right-8 -bottom-8 bg-white dark:bg-neutral-focus p-4 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 animate-bounce" style={{ animationDuration: '3s' }}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">🏆</span>
+                    <div>
+                      <p className="text-xs font-bold text-gray-400 uppercase">Achievement</p>
+                      <p className="font-bold text-gray-900 dark:text-white">Week Warrior</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Decorative Elements behind card */}
+              <div className="absolute -top-10 -right-10 w-full h-full bg-gradient-to-br from-primary to-secondary rounded-3xl opacity-20 transform rotate-6 -z-10"></div>
+            </div>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className="bg-base-200 dark:bg-neutral text-neutral dark:text-gray-100 py-20">
+      {/* Social Proof Strip */}
+      <section className="border-y border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-neutral-focus/50 py-10">
         <div className="container mx-auto px-6">
-          <h2 className="text-4xl font-bold text-center mb-16">Why HabitForge?</h2>
-          <div className="grid md:grid-cols-3 gap-10">
-            <FeatureCard icon="🎮" title="Gamified Progress">
-              Earn points, level up, and unlock achievements. Turn self-improvement into a fun and rewarding game.
-            </FeatureCard>
-            <FeatureCard icon="📈" title="Track Your Streaks">
-              Visualize your consistency with our streak counter. Stay motivated by seeing how many days in a row you've succeeded.
-            </FeatureCard>
-            <FeatureCard icon="🏆" title="Earn Achievements">
-              Celebrate your milestones with unique badges. Get positive reinforcement for your hard work and dedication.
-            </FeatureCard>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <StatItem value="10k+" label="Active Users" />
+            <StatItem value="50k+" label="Habits Forged" />
+            <StatItem value="99%" label="Success Rate" />
+            <StatItem value="4.9/5" label="App Store Rating" />
           </div>
         </div>
-      </div>
+      </section>
 
-      <footer className="bg-base-300 dark:bg-neutral-focus py-8">
-        <div className="container mx-auto px-6 text-center text-gray-500 dark:text-gray-400">
-            <p>&copy; {new Date().getFullYear()} HabitForge. All rights reserved.</p>
+      {/* Features Grid */}
+      <section id="features" className="py-24 bg-white dark:bg-neutral relative scroll-mt-32">
+        <div className="container mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-20">
+            <h2 className="text-sm font-bold text-primary tracking-widest uppercase mb-3">Features</h2>
+            <h3 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-6">Everything you need to build a better you.</h3>
+            <p className="text-xl text-gray-500 dark:text-gray-400">
+              Stop relying on motivation alone. Use a system designed for consistency.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <FeatureCard 
+              icon="🎮" 
+              title="Gamified Progress" 
+              description="Earn points, level up, and unlock achievements. Turn self-improvement into a fun and rewarding RPG-like game."
+              delay="0s"
+            />
+            <FeatureCard 
+              icon="🧬" 
+              title="AI-Powered Coaching" 
+              description="Our Gemini-powered AI analyzes your logs to find failure patterns and suggests smarter, easier goals to keep you on track."
+              delay="0.1s"
+            />
+            <FeatureCard 
+              icon="🔥" 
+              title="Streak Protection" 
+              description="Life happens. Use 'Freeze Streaks' or build resilience with our smart tracking that forgives an occasional miss."
+              delay="0.2s"
+            />
+            <FeatureCard 
+              icon="📸" 
+              title="Food Scanner" 
+              description="Snap a photo of your meal and let our multimodal AI estimate calories instantly. No manual entry required."
+              delay="0.3s"
+            />
+            <FeatureCard 
+              icon="👥" 
+              title="Social Accountability" 
+              description="Share habits with friends. See their progress in real-time and compete on leaderboards for extra motivation."
+              delay="0.4s"
+            />
+            <FeatureCard 
+              icon="📊" 
+              title="Deep Analytics" 
+              description="Visualize your consistency with heatmaps, weekly charts, and trend analysis to understand your behavior."
+              delay="0.5s"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Methodology Section */}
+      <section id="how-it-works" className="py-24 bg-gray-50 dark:bg-neutral-focus/20 border-y border-gray-100 dark:border-gray-800 scroll-mt-32">
+        <div className="container mx-auto px-6">
+            <div className="flex flex-col lg:flex-row items-center gap-16">
+                <div className="lg:w-1/2">
+                    <h2 className="text-sm font-bold text-primary tracking-widest uppercase mb-3">Methodology</h2>
+                    <h3 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-6">Based on the Science of Habit Formation</h3>
+                    <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
+                        We utilize the "Habit Loop" framework (Cue, Action, Reward) combined with micro-commitments. By breaking goals down and providing immediate feedback, we trick your brain into enjoying the process.
+                    </p>
+                    <ul className="space-y-4">
+                        <li className="flex items-start gap-3">
+                            <div className="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold text-sm mt-0.5">1</div>
+                            <div>
+                                <strong className="text-gray-900 dark:text-white block">Trigger (Cue)</strong>
+                                <span className="text-gray-500 dark:text-gray-400">Customizable notifications and context-aware reminders.</span>
+                            </div>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm mt-0.5">2</div>
+                            <div>
+                                <strong className="text-gray-900 dark:text-white block">Action</strong>
+                                <span className="text-gray-500 dark:text-gray-400">Frictionless tracking. One tap to log, scan, or complete.</span>
+                            </div>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <div className="w-6 h-6 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-sm mt-0.5">3</div>
+                            <div>
+                                <strong className="text-gray-900 dark:text-white block">Reward</strong>
+                                <span className="text-gray-500 dark:text-gray-400">Instant XP, level-ups, and satisfying animations.</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div className="lg:w-1/2 relative">
+                    <div className="absolute inset-0 bg-gradient-to-tr from-primary/30 to-secondary/30 rounded-full filter blur-[80px] animate-pulse"></div>
+                    <div className="relative z-10 bg-white dark:bg-neutral-focus border border-gray-200 dark:border-gray-700 rounded-3xl p-8 shadow-2xl">
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="text-center">
+                                <div className="text-3xl mb-2">🔔</div>
+                                <div className="text-xs font-bold uppercase text-gray-400">Trigger</div>
+                            </div>
+                            <div className="h-0.5 flex-1 bg-gray-200 dark:bg-gray-700 mx-4 relative">
+                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 bg-gray-300 rounded-full"></div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-3xl mb-2">⚡</div>
+                                <div className="text-xs font-bold uppercase text-gray-400">Action</div>
+                            </div>
+                            <div className="h-0.5 flex-1 bg-gray-200 dark:bg-gray-700 mx-4 relative">
+                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 bg-gray-300 rounded-full"></div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-3xl mb-2">🎁</div>
+                                <div className="text-xs font-bold uppercase text-gray-400">Reward</div>
+                            </div>
+                        </div>
+                        <div className="bg-base-200 dark:bg-neutral p-4 rounded-xl text-center">
+                            <p className="text-sm italic text-gray-600 dark:text-gray-300">"HabitForge turns discipline into a dopamine hit."</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-24 bg-white dark:bg-neutral scroll-mt-32">
+        <div className="container mx-auto px-6">
+            <div className="text-center max-w-3xl mx-auto mb-16">
+                <h2 className="text-sm font-bold text-primary tracking-widest uppercase mb-3">Pricing</h2>
+                <h3 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-6">Invest in Your Future Self</h3>
+                <p className="text-xl text-gray-500 dark:text-gray-400">
+                    Start for free, upgrade for superpower insights.
+                </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <PricingCard 
+                    variant="outline"
+                    title="Starter"
+                    price="Free"
+                    buttonText="Start For Free"
+                    onClick={onSignUp}
+                    features={[
+                        "Track up to 3 habits",
+                        "Basic analytics & streaks",
+                        "Social sharing",
+                        "Access to Community"
+                    ]}
+                />
+                <PricingCard 
+                    variant="solid"
+                    title="Premium"
+                    price="$9.99"
+                    isPopular={true}
+                    buttonText="Get Premium"
+                    onClick={onSignUp}
+                    features={[
+                        "Unlimited habits",
+                        "AI-Powered Goal Coaching",
+                        "Food Scanner (Multimodal AI)",
+                        "Advanced Data Export",
+                        "Priority Support"
+                    ]}
+                />
+            </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gray-900 dark:bg-black">
+           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 opacity-30"></div>
+        </div>
+        <div className="container mx-auto px-6 relative z-10 text-center">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-8 tracking-tight">
+            Ready to Forge Your New Life?
+          </h2>
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-12 leading-relaxed">
+            Join thousands of others who have taken control of their habits. It takes 21 days to form a habit, but only 1 minute to sign up.
+          </p>
+          <button 
+            onClick={onSignUp}
+            className="bg-white text-gray-900 hover:bg-gray-100 font-bold py-5 px-12 rounded-full text-xl shadow-2xl transition-transform transform hover:scale-105"
+          >
+            Start Your Journey Now
+          </button>
+          <p className="mt-6 text-sm text-gray-400">No credit card required • Cancel anytime</p>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-white dark:bg-neutral border-t border-gray-100 dark:border-gray-800 py-12">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center gap-2 mb-4 md:mb-0">
+              <div className="w-6 h-6 bg-gradient-to-tr from-primary to-secondary rounded-md"></div>
+              <span className="text-xl font-bold text-gray-900 dark:text-white">HabitForge</span>
+            </div>
+            <div className="flex space-x-8 text-sm font-medium text-gray-500 dark:text-gray-400">
+              <a href="#" className="hover:text-primary transition">Privacy</a>
+              <a href="#" className="hover:text-primary transition">Terms</a>
+              <a href="#" className="hover:text-primary transition">Twitter</a>
+              <a href="#" className="hover:text-primary transition">GitHub</a>
+            </div>
+          </div>
+          <div className="mt-8 text-center text-xs text-gray-400">
+            &copy; {new Date().getFullYear()} HabitForge. All rights reserved.
+          </div>
         </div>
       </footer>
     </div>
