@@ -57,8 +57,8 @@ const Dashboard: React.FC = () => {
       { id: 'my-habits', label: 'My Habits', icon: '🧘' },
       { id: 'shared', label: 'Shared', icon: '👥' },
       { id: 'friends', label: 'Friends', icon: '👋' },
-      { id: 'food-scanner', label: 'Food Scanner', icon: '📸' },
-      { id: 'refinement', label: 'AI Coach', icon: '🧬' },
+      { id: 'food-scanner', label: 'Scanner', icon: '📸' }, // Shortened label
+      { id: 'refinement', label: 'Coach', icon: '🧬' }, // Shortened label
       { id: 'premium', label: 'Premium', icon: '💎' },
   ] as const;
 
@@ -73,7 +73,7 @@ const Dashboard: React.FC = () => {
           />
       )}
       <Header onAddHabit={() => setIsAddModalOpen(true)} />
-      <main className="container mx-auto p-4 md:p-8">
+      <main className="container mx-auto p-3 md:p-8">
         {selectedHabit ? (
           selectedHabit.sharingDetails ? (
             <SharedProgressPage habit={selectedHabit} onBack={() => setSelectedHabitId(null)} />
@@ -83,12 +83,12 @@ const Dashboard: React.FC = () => {
         ) : (
           <>
             {/* Tab Navigation */}
-            <div className="flex items-center space-x-1 bg-gray-200/50 dark:bg-gray-800/50 p-1.5 rounded-2xl mb-8 overflow-x-auto no-scrollbar max-w-3xl mx-auto">
+            <div className="flex items-center space-x-1 bg-gray-200/50 dark:bg-gray-800/50 p-1 rounded-2xl mb-6 md:mb-8 overflow-x-auto no-scrollbar max-w-3xl mx-auto">
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
-                        className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 whitespace-nowrap
+                        className={`flex-1 flex items-center justify-center space-x-1 md:space-x-2 px-3 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all duration-200 whitespace-nowrap
                             ${activeTab === tab.id 
                                 ? 'bg-white dark:bg-neutral-focus text-primary shadow-sm scale-100' 
                                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200/50 dark:hover:bg-white/5'
@@ -101,8 +101,8 @@ const Dashboard: React.FC = () => {
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
-                <div className={`lg:col-span-2 space-y-8 ${isFullWidthTab ? 'lg:col-span-3' : ''}`}>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8 animate-fade-in">
+                <div className={`lg:col-span-2 space-y-4 md:space-y-8 ${isFullWidthTab ? 'lg:col-span-3' : ''}`}>
                   {activeTab === 'my-habits' && (
                       <>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -110,32 +110,32 @@ const Dashboard: React.FC = () => {
                              {!state.user.isPremium && (
                                 <div 
                                     onClick={() => setActiveTab('premium')}
-                                    className="md:col-span-2 bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-6 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between cursor-pointer hover:shadow-xl transition-shadow h-full min-h-[160px]"
+                                    className="md:col-span-2 bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-6 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between cursor-pointer hover:shadow-xl transition-shadow h-full min-h-[140px] md:min-h-[160px]"
                                 >
                                     <div className="mb-4 sm:mb-0">
                                         <div className="flex items-center space-x-2 mb-2">
                                             <span className="text-2xl">👑</span>
-                                            <h3 className="text-xl font-bold">Unlock Premium Insights</h3>
+                                            <h3 className="text-lg md:text-xl font-bold">Unlock Premium Insights</h3>
                                         </div>
-                                        <p className="text-gray-300 text-sm max-w-md">Get AI-powered predictions and analytics.</p>
+                                        <p className="text-gray-300 text-xs md:text-sm max-w-md">Get AI-powered predictions and analytics.</p>
                                     </div>
-                                    <button className="bg-white text-gray-900 px-4 py-2 rounded-full font-bold hover:bg-gray-100 transition transform hover:scale-105 shadow-md whitespace-nowrap text-sm">
+                                    <button className="bg-white text-gray-900 px-4 py-2 rounded-full font-bold hover:bg-gray-100 transition transform hover:scale-105 shadow-md whitespace-nowrap text-xs md:text-sm">
                                         Upgrade
                                     </button>
                                 </div>
                              )}
                              
                              {/* Widgets Grid */}
-                             <div className="col-span-1 h-40 lg:h-auto">
+                             <div className="col-span-1 h-32 md:h-40 lg:h-auto">
                                  <CalorieWidget />
                              </div>
-                             <div className="col-span-1 h-40 lg:h-auto">
+                             <div className="col-span-1 h-32 md:h-40 lg:h-auto">
                                  <PointTrackerWidget />
                              </div>
-                             <div className="col-span-1 h-40 lg:h-auto">
+                             <div className="col-span-1 h-32 md:h-40 lg:h-auto">
                                  <TopStreakWidget />
                              </div>
-                             <div className="col-span-1 h-40 lg:h-auto">
+                             <div className="col-span-1 h-32 md:h-40 lg:h-auto">
                                  <FoodScannerWidget onClick={() => setActiveTab('food-scanner')} />
                              </div>
                           </div>

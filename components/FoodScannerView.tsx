@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 
 // API Configuration
@@ -135,7 +136,7 @@ const FoodScannerView: React.FC = () => {
 
   return (
     <div className="animate-fade-in">
-       <div className="bg-gradient-to-br from-indigo-900 to-purple-900 rounded-3xl shadow-2xl overflow-hidden text-white relative mb-8 p-8 md:p-12">
+       <div className="bg-gradient-to-br from-indigo-900 to-purple-900 rounded-3xl shadow-2xl overflow-hidden text-white relative mb-6 md:mb-8 p-6 md:p-12">
           <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
              <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
                  <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -144,35 +145,35 @@ const FoodScannerView: React.FC = () => {
                  <rect width="100%" height="100%" fill="url(#grid-pattern)" />
              </svg>
           </div>
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
              <div>
-                 <h2 className="text-3xl md:text-4xl font-extrabold mb-2">AI Food Scanner</h2>
-                 <p className="text-indigo-200">Snap a photo of your meal to track calories instantly.</p>
+                 <h2 className="text-2xl md:text-4xl font-extrabold mb-1 md:mb-2">AI Food Scanner</h2>
+                 <p className="text-indigo-200 text-sm md:text-base">Snap a photo of your meal to track calories instantly.</p>
              </div>
-             <div className="text-right bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/20">
-                 <div className="text-sm text-indigo-200 uppercase tracking-wider font-bold">Today's Calories</div>
-                 <div className="text-3xl font-bold">{totalCalories} <span className="text-base font-normal opacity-70">/ {dailyGoal} kcal</span></div>
+             <div className="text-right bg-white/10 backdrop-blur-sm p-3 md:p-4 rounded-2xl border border-white/20 w-full md:w-auto">
+                 <div className="text-xs text-indigo-200 uppercase tracking-wider font-bold">Today's Calories</div>
+                 <div className="text-2xl md:text-3xl font-bold">{totalCalories} <span className="text-sm md:text-base font-normal opacity-70">/ {dailyGoal} kcal</span></div>
              </div>
           </div>
        </div>
 
-       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 items-start">
           {/* Left Column: Scanner */}
           <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white dark:bg-neutral-focus p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
-                  <h3 className="text-xl font-bold text-neutral dark:text-white mb-4 flex items-center gap-2">
+              <div className="bg-white dark:bg-neutral-focus p-4 md:p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+                  <h3 className="text-lg md:text-xl font-bold text-neutral dark:text-white mb-4 flex items-center gap-2">
                       <span>📸</span> New Entry
                   </h3>
                   
                   {!previewUrl ? (
                       <div 
                           onClick={() => fileInputRef.current?.click()}
-                          className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl h-64 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-primary transition group bg-base-200 dark:bg-neutral"
+                          className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl h-48 md:h-64 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-primary transition group bg-base-200 dark:bg-neutral"
                       >
-                          <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 text-primary rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                          <div className="w-12 h-12 md:w-16 md:h-16 bg-blue-50 dark:bg-blue-900/20 text-primary rounded-full flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform">
+                              <svg className="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                           </div>
-                          <p className="font-medium text-gray-600 dark:text-gray-300">Click to upload photo</p>
+                          <p className="font-medium text-gray-600 dark:text-gray-300 text-sm md:text-base">Click to upload photo</p>
                           <p className="text-xs text-gray-400 mt-1">Supports JPG, PNG</p>
                           <input 
                               type="file" 
@@ -183,16 +184,16 @@ const FoodScannerView: React.FC = () => {
                           />
                       </div>
                   ) : (
-                      <div className="rounded-xl overflow-hidden relative border border-gray-200 dark:border-gray-700 bg-black h-80 flex items-center justify-center">
+                      <div className="rounded-xl overflow-hidden relative border border-gray-200 dark:border-gray-700 bg-black h-64 md:h-80 flex items-center justify-center">
                           <img src={previewUrl} alt="Preview" className={`max-h-full max-w-full object-contain transition-opacity duration-300 ${isAnalyzing ? 'opacity-50 blur-sm' : 'opacity-100'}`} />
                           
                           {isAnalyzing && (
                               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm text-white z-20">
-                                  <div className="relative w-16 h-16 mb-4">
+                                  <div className="relative w-12 h-12 md:w-16 md:h-16 mb-3 md:mb-4">
                                       <div className="absolute inset-0 border-4 border-gray-500 rounded-full"></div>
                                       <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
                                   </div>
-                                  <span className="font-bold tracking-wide animate-pulse text-lg drop-shadow-lg">Analyzing Food...</span>
+                                  <span className="font-bold tracking-wide animate-pulse text-base md:text-lg drop-shadow-lg">Analyzing Food...</span>
                                   <span className="text-xs text-gray-300 mt-2 font-medium drop-shadow-md">Powered by Gemini AI</span>
                               </div>
                           )}
@@ -202,7 +203,7 @@ const FoodScannerView: React.FC = () => {
                                 onClick={() => { setPreviewUrl(null); setAnalysisResult(null); setError(null); }}
                                 className="absolute top-3 right-3 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-md transition z-10"
                             >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"></path></svg>
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
                           )}
                       </div>
@@ -220,14 +221,14 @@ const FoodScannerView: React.FC = () => {
 
                   {analysisResult && (
                       <div className="mt-6 animate-slide-in-up">
-                          <div className="bg-base-200 dark:bg-neutral border border-primary/20 rounded-xl p-5 flex justify-between items-center">
+                          <div className="bg-base-200 dark:bg-neutral border border-primary/20 rounded-xl p-4 md:p-5 flex justify-between items-center">
                               <div>
                                   <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Identified Item</p>
-                                  <h4 className="text-2xl font-bold text-neutral dark:text-white">{analysisResult.food_item_name}</h4>
+                                  <h4 className="text-xl md:text-2xl font-bold text-neutral dark:text-white">{analysisResult.food_item_name}</h4>
                               </div>
                               <div className="text-right">
-                                  <span className="text-3xl font-bold text-primary">{analysisResult.calories_value_kcals}</span>
-                                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">kcal</span>
+                                  <span className="text-2xl md:text-3xl font-bold text-primary">{analysisResult.calories_value_kcals}</span>
+                                  <span className="text-xs md:text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">kcal</span>
                               </div>
                           </div>
                           <button 
@@ -244,8 +245,8 @@ const FoodScannerView: React.FC = () => {
 
           {/* Right Column: Logs */}
           <div className="lg:col-span-1 h-full">
-              <div className="bg-white dark:bg-neutral-focus p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 h-full flex flex-col min-h-[500px]">
-                  <h3 className="text-xl font-bold text-neutral dark:text-white mb-6">Today's Log</h3>
+              <div className="bg-white dark:bg-neutral-focus p-4 md:p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 h-full flex flex-col min-h-[400px] md:min-h-[500px]">
+                  <h3 className="text-lg md:text-xl font-bold text-neutral dark:text-white mb-4 md:mb-6">Today's Log</h3>
                   
                   {/* Progress Bar */}
                   <div className="mb-6">

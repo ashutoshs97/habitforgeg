@@ -63,10 +63,10 @@ const Header: React.FC<HeaderProps> = ({ onAddHabit }) => {
   return (
     <>
       <header className={`sticky top-0 z-40 shadow-sm transition-colors duration-500 ${isCelebrating ? 'bg-green-600' : 'bg-white/70 dark:bg-neutral-focus/70 backdrop-blur-lg'}`}>
-        <div className="container mx-auto px-4 md:px-8 py-3 flex justify-between items-center">
+        <div className="container mx-auto px-4 md:px-8 py-2 md:py-3 flex justify-between items-center">
           <div className="flex items-center space-x-4">
-              <div className={`text-3xl font-bold tracking-tighter ${isCelebrating ? 'text-white' : 'text-primary'}`}>HabitForge</div>
-              <div className={`hidden sm:block border-l ${isCelebrating ? 'border-white/30' : 'dark:border-gray-700'} pl-4`}>
+              <div className={`text-xl md:text-3xl font-bold tracking-tighter ${isCelebrating ? 'text-white' : 'text-primary'}`}>HabitForge</div>
+              <div className={`hidden md:block border-l ${isCelebrating ? 'border-white/30' : 'dark:border-gray-700'} pl-4`}>
                   <div className={`text-md font-semibold ${isCelebrating ? 'text-white' : 'text-neutral dark:text-gray-100'}`}>Welcome, {user.name}!</div>
                    <div className={`text-xs ${isCelebrating ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'}`}>Level {user.level} &middot; {user.willpowerPoints} WP</div>
               </div>
@@ -74,20 +74,20 @@ const Header: React.FC<HeaderProps> = ({ onAddHabit }) => {
 
           <div className="flex-1 text-center px-4">
             {isCelebrating && (
-              <div className="text-white font-bold text-lg animate-fade-in">
-                ✨ Achievement Unlocked: {achievementMessage}! ✨
+              <div className="text-white font-bold text-sm md:text-lg animate-fade-in">
+                ✨ <span className="hidden sm:inline">Achievement Unlocked:</span> {achievementMessage}! ✨
               </div>
             )}
           </div>
           
           <div className="flex items-center space-x-1 md:space-x-2">
-              <div className="w-28 hidden sm:block">
+              <div className="w-28 hidden lg:block">
                    <ProgressBar percentage={progressPercentage} />
               </div>
               
               <button
                 onClick={() => setIsPremiumModalOpen(true)}
-                className={`font-bold py-2 px-3 rounded-xl shadow-md transition-all duration-300 flex items-center space-x-1 transform hover:scale-105
+                className={`font-bold py-1.5 px-2.5 md:py-2 md:px-3 rounded-xl shadow-md transition-all duration-300 flex items-center space-x-1 transform hover:scale-105 text-xs md:text-base
                   ${user.isPremium 
                     ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-white hover:from-amber-500 hover:to-yellow-600' 
                     : 'bg-gradient-to-r from-gray-800 to-gray-900 text-white hover:from-black hover:to-gray-800'
@@ -99,7 +99,7 @@ const Header: React.FC<HeaderProps> = ({ onAddHabit }) => {
 
               <button
                 onClick={onAddHabit}
-                className="bg-primary hover:bg-primary-focus text-white font-bold py-2 px-4 rounded-xl shadow-md transition-all duration-300 flex items-center space-x-2 transform hover:scale-105"
+                className="bg-primary hover:bg-primary-focus text-white font-bold py-1.5 px-3 md:py-2 md:px-4 rounded-xl shadow-md transition-all duration-300 flex items-center space-x-2 transform hover:scale-105"
                 title="Add a new habit"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -117,7 +117,7 @@ const Header: React.FC<HeaderProps> = ({ onAddHabit }) => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                       </svg>
                       {unreadCount > 0 && (
-                          <span className="absolute top-0 right-0 block h-5 w-5 rounded-full bg-error ring-2 ring-white dark:ring-neutral-focus text-white text-xs flex items-center justify-center font-bold">
+                          <span className="absolute top-0 right-0 block h-4 w-4 md:h-5 md:w-5 rounded-full bg-error ring-2 ring-white dark:ring-neutral-focus text-white text-[10px] md:text-xs flex items-center justify-center font-bold">
                               {unreadCount}
                           </span>
                       )}
@@ -127,7 +127,7 @@ const Header: React.FC<HeaderProps> = ({ onAddHabit }) => {
               
               <button
                   onClick={() => setIsSettingsModalOpen(true)}
-                  className={`${isCelebrating ? 'text-white/80 hover:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-secondary'} transition-colors p-2 rounded-full hover:bg-black/10`}
+                  className={`${isCelebrating ? 'text-white/80 hover:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-secondary'} transition-colors p-2 rounded-full hover:bg-black/10 hidden sm:block`}
                   title="Settings"
               >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -138,7 +138,7 @@ const Header: React.FC<HeaderProps> = ({ onAddHabit }) => {
               
               <button
                   onClick={toggleTheme}
-                  className={`${isCelebrating ? 'text-white/80 hover:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-secondary'} transition-colors p-2 rounded-full hover:bg-black/10`}
+                  className={`${isCelebrating ? 'text-white/80 hover:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-secondary'} transition-colors p-2 rounded-full hover:bg-black/10 hidden sm:block`}
                   title="Toggle Theme"
               >
                   {theme === 'light' ? <MoonIcon className="h-6 w-6" /> : <SunIcon className="h-6 w-6" />}

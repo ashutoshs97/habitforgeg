@@ -59,24 +59,23 @@ const GoalRefinementView: React.FC = () => {
     }
   };
 
-  // ... (Rest of the UI/JSX is identical to previous version) ...
   return (
     <div className="animate-fade-in">
-        <div className="bg-gradient-to-br from-indigo-600 to-blue-600 rounded-3xl shadow-2xl overflow-hidden text-white relative mb-8 p-8 md:p-12">
+        <div className="bg-gradient-to-br from-indigo-600 to-blue-600 rounded-3xl shadow-2xl overflow-hidden text-white relative mb-6 md:mb-8 p-6 md:p-12">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div>
-                    <h2 className="text-3xl md:text-4xl font-extrabold mb-2 flex items-center gap-3">
+                    <h2 className="text-2xl md:text-4xl font-extrabold mb-2 flex items-center gap-3">
                         <span>🧬</span> AI Goal Refinement
                     </h2>
-                    <p className="text-indigo-100 text-lg max-w-xl">
+                    <p className="text-indigo-100 text-sm md:text-lg max-w-xl">
                         Struggling to stick to a habit? Our AI analyzes your tracking history to find failure patterns and suggests smarter, easier goals.
                     </p>
                 </div>
                 {!analysis && !isLoading && (
                     <button 
                         onClick={handleAnalyze}
-                        className="bg-white text-indigo-600 hover:bg-indigo-50 font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 whitespace-nowrap"
+                        className="bg-white text-indigo-600 hover:bg-indigo-50 font-bold py-3 px-6 md:px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 whitespace-nowrap text-sm md:text-base"
                     >
                         Analyze My Habits
                     </button>
@@ -86,13 +85,13 @@ const GoalRefinementView: React.FC = () => {
 
         <div className="max-w-3xl mx-auto">
             {isLoading && (
-                <div className="bg-white dark:bg-neutral-focus rounded-2xl shadow-lg p-12 text-center">
-                    <div className="relative w-20 h-20 mx-auto mb-6">
+                <div className="bg-white dark:bg-neutral-focus rounded-2xl shadow-lg p-8 md:p-12 text-center">
+                    <div className="relative w-16 h-16 md:w-20 md:h-20 mx-auto mb-6">
                         <div className="absolute inset-0 border-4 border-gray-200 dark:border-gray-700 rounded-full"></div>
                         <div className="absolute inset-0 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
                     </div>
-                    <h3 className="text-xl font-bold text-neutral dark:text-white mb-2">Crunching the Numbers...</h3>
-                    <p className="text-gray-500 dark:text-gray-400">Identifying behavior patterns in your logs.</p>
+                    <h3 className="text-lg md:text-xl font-bold text-neutral dark:text-white mb-2">Crunching the Numbers...</h3>
+                    <p className="text-sm md:text-base text-gray-500 dark:text-gray-400">Identifying behavior patterns in your logs.</p>
                 </div>
             )}
 
@@ -120,20 +119,20 @@ const GoalRefinementView: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="bg-white dark:bg-neutral-focus border border-indigo-100 dark:border-gray-700 rounded-3xl p-8 relative shadow-lg overflow-hidden">
+                    <div className="bg-white dark:bg-neutral-focus border border-indigo-100 dark:border-gray-700 rounded-3xl p-6 md:p-8 relative shadow-lg overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-blue-500"></div>
                         
                         <div className="flex items-start gap-4">
                             <div className="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 p-3 rounded-xl">
-                                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                <svg className="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                             </div>
                             <div>
-                                <h3 className="text-lg font-bold text-indigo-900 dark:text-indigo-300 mb-2">Suggested Refinement</h3>
-                                <p className="text-2xl font-medium text-neutral dark:text-white mb-6 leading-snug">"{analysis.refinement_suggestion}"</p>
+                                <h3 className="text-base md:text-lg font-bold text-indigo-900 dark:text-indigo-300 mb-2">Suggested Refinement</h3>
+                                <p className="text-lg md:text-2xl font-medium text-neutral dark:text-white mb-6 leading-snug">"{analysis.refinement_suggestion}"</p>
                                 
                                 <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700">
                                     <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">The Logic</h4>
-                                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{analysis.rationale}</p>
+                                    <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 leading-relaxed">{analysis.rationale}</p>
                                 </div>
                             </div>
                         </div>
@@ -148,6 +147,7 @@ const GoalRefinementView: React.FC = () => {
                         </button>
                         <button 
                             onClick={() => {
+                                // Logic to implement apply change would go here
                                 alert("In the full version, this would open the habit editor to apply the change!");
                             }}
                             className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none transition-transform hover:scale-105"
