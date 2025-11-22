@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useHabits } from '../context/HabitContext';
 
 // API Configuration
@@ -13,15 +13,38 @@ interface AnalysisResult {
 }
 
 const GoalRefinementView: React.FC = () => {
-  const { state } = useHabits();
+  const { state, dispatch } = useHabits();
   const [isLoading, setIsLoading] = useState(false);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // State for the editable refinement
+  const [refinedName, setRefinedName] = useState('');
+  const [targetHabitId, setTargetHabitId] = useState<string | null>(null);
+  const [isSaved, setIsSaved] = useState(false);
+
+  // Effect to initialize the editable field when analysis arrives
+  useEffect(() => {
+      if (analysis) {
+          // 1. Clean up the suggestion (remove surrounding quotes if AI added them)
+          const cleanName = analysis.refinement_suggestion.replace(/^['"]|['"]$/g, '');
+          setRefinedName(cleanName);
+
+          // 2. Find the matching habit ID in our state
+          const match = state.habits.find(h => h.name.toLowerCase() === analysis.habit_to_refine.toLowerCase());
+          if (match) {
+              setTargetHabitId(match.id);
+          } else {
+              setTargetHabitId(null); // Habit might have been deleted or renamed
+          }
+      }
+  }, [analysis, state.habits]);
 
   const handleAnalyze = async () => {
     setIsLoading(true);
     setError(null);
     setAnalysis(null);
+    setIsSaved(false);
 
     try {
         if (state.habits.length === 0) {
@@ -58,6 +81,38 @@ const GoalRefinementView: React.FC = () => {
         setIsLoading(false);
     }
   };
+
+  const handleApplyChange = () => {
+      if (!targetHabitId || !refinedName.trim()) return;
+
+      dispatch({ 
+          type: 'UPDATE_HABIT', 
+          payload: { 
+              habitId: targetHabitId, 
+              name: refinedName.trim() 
+          } 
+      });
+
+      setIsSaved(true);
+      
+      // Reset view after a short delay
+      setTimeout(() => {
+          setAnalysis(null);
+          setIsSaved(false);
+      }, 2000);
+  };
+
+  if (isSaved) {
+      return (
+        <div className="flex flex-col items-center justify-center py-24 animate-fade-in text-center">
+            <div className="w-24 h-24 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-6 text-green-600 dark:text-green-400 animate-pop-in">
+                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h2 className="text-3xl font-bold text-neutral dark:text-white mb-2">Habit Updated!</h2>
+            <p className="text-gray-500 dark:text-gray-400">Your goal has been refined. Good luck!</p>
+        </div>
+      );
+  }
 
   return (
     <div className="animate-fade-in">
@@ -122,13 +177,24 @@ const GoalRefinementView: React.FC = () => {
                     <div className="bg-white dark:bg-neutral-focus border border-indigo-100 dark:border-gray-700 rounded-3xl p-6 md:p-8 relative shadow-lg overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-blue-500"></div>
                         
-                        <div className="flex items-start gap-4">
-                            <div className="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 p-3 rounded-xl">
-                                <svg className="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <div className="flex flex-col md:flex-row items-start gap-6">
+                            <div className="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 p-3 rounded-xl flex-shrink-0 hidden md:block">
+                                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                             </div>
-                            <div>
-                                <h3 className="text-base md:text-lg font-bold text-indigo-900 dark:text-indigo-300 mb-2">Suggested Refinement</h3>
-                                <p className="text-lg md:text-2xl font-medium text-neutral dark:text-white mb-6 leading-snug">"{analysis.refinement_suggestion}"</p>
+                            <div className="flex-grow w-full">
+                                <h3 className="text-base md:text-lg font-bold text-indigo-900 dark:text-indigo-300 mb-4">Suggested Refinement</h3>
+                                
+                                {/* Editable Input Section */}
+                                <div className="mb-6">
+                                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">New Habit Name</label>
+                                    <input 
+                                        type="text" 
+                                        value={refinedName} 
+                                        onChange={(e) => setRefinedName(e.target.value)}
+                                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-lg font-bold text-neutral dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                                        placeholder="E.g. Read 5 mins"
+                                    />
+                                </div>
                                 
                                 <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-5 border border-gray-100 dark:border-gray-700">
                                     <h4 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">The Logic</h4>
@@ -145,14 +211,13 @@ const GoalRefinementView: React.FC = () => {
                         >
                             Dismiss
                         </button>
+                        
                         <button 
-                            onClick={() => {
-                                // Logic to implement apply change would go here
-                                alert("In the full version, this would open the habit editor to apply the change!");
-                            }}
-                            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none transition-transform hover:scale-105"
+                            onClick={handleApplyChange}
+                            disabled={!targetHabitId || !refinedName.trim()}
+                            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                         >
-                            Apply Change
+                            {targetHabitId ? 'Apply Change' : 'Habit Not Found'}
                         </button>
                     </div>
                 </div>

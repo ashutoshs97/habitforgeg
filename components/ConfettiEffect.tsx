@@ -3,9 +3,13 @@ import React, { useEffect, useRef } from 'react';
 import { useHabits } from '../context/HabitContext';
 
 const ConfettiEffect: React.FC = () => {
-  const { state } = useHabits();
+  const { state, dispatch } = useHabits();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { newlyUnlockedAchievements } = state;
+
+  const handleDismiss = () => {
+      dispatch({ type: 'CLEAR_NEW_ACHIEVEMENTS' });
+  };
 
   useEffect(() => {
     if (newlyUnlockedAchievements.length === 0) return;
@@ -86,6 +90,8 @@ const ConfettiEffect: React.FC = () => {
         animationId = requestAnimationFrame(animate);
       } else {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Optionally auto-clear here if animation finishes naturally
+        // But we rely on the Header timeout or click for now.
       }
     };
 
@@ -106,7 +112,9 @@ const ConfettiEffect: React.FC = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-[60]"
+      onClick={handleDismiss}
+      title="Click to dismiss celebration"
+      className="fixed inset-0 z-[60] cursor-pointer"
       style={{ display: newlyUnlockedAchievements.length > 0 ? 'block' : 'none' }}
     />
   );

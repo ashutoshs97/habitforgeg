@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import type { Habit, User, HabitType, AppState, SharedHabitData, Comment, SharedHabitDetails, Notification, NotificationType, UserSettings } from '../types';
 import { ACHIEVEMENTS, COLOR_OPTIONS } from '../constants';
@@ -7,6 +6,7 @@ type Action =
   | { type: 'LOAD_STATE'; payload: AppState }
   | { type: 'COMPLETE_HABIT'; payload: { habitId: string; today: Date } }
   | { type: 'ADD_HABIT'; payload: { name: string; emoji: string; type: HabitType; color: string } }
+  | { type: 'UPDATE_HABIT'; payload: { habitId: string; name: string } }
   | { type: 'DELETE_HABIT'; payload: { habitId: string } }
   | { type: 'RESET_STREAKS' }
   | { type: 'CLEAR_NEW_ACHIEVEMENTS' }
@@ -253,6 +253,13 @@ const habitReducer = (state: AppState, action: Action): AppState => {
         }
 
         return { ...state, habits, user, newlyUnlockedAchievements: newlyUnlocked };
+    }
+    case 'UPDATE_HABIT': {
+        const { habitId, name } = action.payload;
+        const updatedHabits = state.habits.map(h => 
+            h.id === habitId ? { ...h, name } : h
+        );
+        return { ...state, habits: updatedHabits };
     }
     case 'DELETE_HABIT': {
         return { ...state, habits: state.habits.filter(h => h.id !== action.payload.habitId) };
@@ -528,7 +535,7 @@ export const HabitProvider: React.FC<HabitProviderProps> = ({ children, user }) 
 export const useHabits = () => {
   const context = useContext(HabitContext);
   if (context === undefined) {
-    throw new Error('useHabits must be used within a HabitProvider');
+        throw new Error('useHabits must be used within a HabitProvider');
   }
   return context;
 };

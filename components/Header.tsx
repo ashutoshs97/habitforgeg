@@ -44,13 +44,22 @@ const Header: React.FC<HeaderProps> = ({ onAddHabit }) => {
       if (achievement) {
         setAchievementMessage(achievement.name);
         const timer = setTimeout(() => {
+          // This logic runs if the user DOESN'T click the confetti or dismiss button manually
           setAchievementMessage(null);
           dispatch({ type: 'CLEAR_NEW_ACHIEVEMENTS' });
         }, 4000); // Display for 4 seconds
         return () => clearTimeout(timer);
       }
+    } else {
+        // If the array is cleared externally (e.g. by clicking the confetti), clear the message immediately
+        setAchievementMessage(null);
     }
   }, [state.newlyUnlockedAchievements, dispatch]);
+
+  const handleDismissAchievement = () => {
+      setAchievementMessage(null);
+      dispatch({ type: 'CLEAR_NEW_ACHIEVEMENTS' });
+  };
 
   const pointsForNextLevel = 100;
   const pointsInCurrentLevel = user.willpowerPoints % pointsForNextLevel;
@@ -74,8 +83,17 @@ const Header: React.FC<HeaderProps> = ({ onAddHabit }) => {
 
           <div className="flex-1 text-center px-4">
             {isCelebrating && (
-              <div className="text-white font-bold text-sm md:text-lg animate-fade-in">
-                ✨ <span className="hidden sm:inline">Achievement Unlocked:</span> {achievementMessage}! ✨
+              <div className="text-white font-bold text-sm md:text-lg animate-fade-in flex items-center justify-center gap-2">
+                <span>✨ <span className="hidden sm:inline">Achievement Unlocked:</span> {achievementMessage}! ✨</span>
+                <button 
+                    onClick={handleDismissAchievement}
+                    className="ml-2 p-1 bg-black/10 hover:bg-black/20 rounded-full transition-colors text-white/90 hover:text-white cursor-pointer"
+                    title="Dismiss"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414-1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                </button>
               </div>
             )}
           </div>
