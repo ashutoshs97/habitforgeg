@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface LandingPageProps {
@@ -16,11 +17,13 @@ const FeatureCard: React.FC<{ icon: string; title: string; children: React.React
 const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onSignUp }) => {
   return (
     <div className="min-h-screen bg-base-200 dark:bg-neutral text-base-content dark:text-gray-300">
-      <div className="relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-[800px] bg-gradient-to-br from-primary via-purple-500 to-secondary opacity-80 dark:opacity-70 transform -skew-y-6"></div>
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary via-purple-500 to-secondary dark:from-primary-focus dark:to-secondary">
+        {/* Dark overlay for better text contrast in light/dark modes */}
+        <div className="absolute inset-0 bg-black/10 dark:bg-black/30"></div>
+        
         <div className="relative container mx-auto px-6 py-24 md:py-32 text-center text-white">
           <h1 className="text-5xl md:text-7xl font-extrabold mb-4 animate-fade-in drop-shadow-lg">Welcome to HabitForge</h1>
-          <p className="text-xl md:text-2xl max-w-3xl mx-auto mb-12 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <p className="text-xl md:text-2xl max-w-3xl mx-auto mb-12 animate-fade-in text-white/90" style={{ animationDelay: '0.2s' }}>
             Build good habits. Break bad ones. Gamify your self-improvement journey.
           </p>
           <div 
@@ -40,6 +43,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onSignUp }) => {
               Sign In
             </button>
           </div>
+        </div>
+
+        {/* Wave shape at the bottom for a smooth transition */}
+        <div className="absolute bottom-0 left-0 right-0 translate-y-1 text-base-200 dark:text-neutral">
+            <svg viewBox="0 0 1440 120" className="w-full h-auto fill-current block" preserveAspectRatio="none">
+                <path d="M0,64L80,69.3C160,75,320,85,480,80C640,75,800,53,960,48C1120,43,1280,53,1360,58.7L1440,64L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path>
+            </svg>
         </div>
       </div>
 
