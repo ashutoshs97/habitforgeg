@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 
 interface LandingPageProps {
@@ -37,37 +36,39 @@ const PricingCard: React.FC<{
     onClick: () => void;
     variant: 'outline' | 'solid' 
 }> = ({ title, price, features, isPopular, buttonText, onClick, variant }) => (
-    <div className={`relative p-6 md:p-8 rounded-3xl flex flex-col h-full transition-all duration-300 hover:-translate-y-2 ${
+    <div className={`relative p-6 md:p-8 rounded-3xl flex flex-col h-full transition-all duration-300 ${
         variant === 'solid' 
-            ? 'bg-neutral-900 text-white shadow-2xl ring-4 ring-primary/20' 
-            : 'bg-white dark:bg-neutral-focus text-gray-900 dark:text-white shadow-lg border border-gray-100 dark:border-gray-700'
+            ? 'bg-white dark:bg-neutral-focus border-2 border-primary shadow-2xl scale-100 md:scale-105 z-10' 
+            : 'bg-white dark:bg-neutral-focus border border-gray-100 dark:border-gray-700 shadow-lg hover:border-gray-200 dark:hover:border-gray-600'
     }`}>
         {isPopular && (
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-primary to-secondary text-white text-[10px] md:text-xs font-bold uppercase tracking-widest py-1 px-3 md:py-1.5 md:px-4 rounded-full shadow-lg whitespace-nowrap">
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-secondary text-white text-[10px] md:text-xs font-bold uppercase tracking-widest py-1.5 px-4 rounded-full shadow-lg whitespace-nowrap z-20">
                 Most Popular
             </div>
         )}
-        <h3 className={`text-lg md:text-xl font-bold mb-2 ${variant === 'solid' ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{title}</h3>
+        <h3 className={`text-lg md:text-xl font-bold mb-2 ${variant === 'solid' ? 'text-primary' : 'text-gray-900 dark:text-white'}`}>{title}</h3>
         <div className="mb-4 md:mb-6">
-            <span className="text-3xl md:text-4xl font-extrabold">{price}</span>
-            {price !== 'Free' && <span className={`text-xs md:text-sm font-medium ${variant === 'solid' ? 'text-gray-400' : 'text-gray-500'}`}>/month</span>}
+            <span className="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white">{price}</span>
+            {price !== 'Free' && <span className="text-xs md:text-sm font-medium text-gray-500">/month</span>}
         </div>
         <ul className="space-y-3 md:space-y-4 mb-6 md:mb-8 flex-1">
             {features.map((feature, i) => (
                 <li key={i} className="flex items-start gap-3 text-xs md:text-sm">
-                    <svg className={`w-4 h-4 md:w-5 md:h-5 flex-shrink-0 ${variant === 'solid' ? 'text-primary' : 'text-green-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className={variant === 'solid' ? 'text-gray-300' : 'text-gray-600 dark:text-gray-300'}>{feature}</span>
+                    <div className={`w-5 h-5 flex-shrink-0 rounded-full flex items-center justify-center ${variant === 'solid' ? 'bg-primary/10 text-primary' : 'bg-green-100 text-green-600'}`}>
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <span className="text-gray-600 dark:text-gray-300">{feature}</span>
                 </li>
             ))}
         </ul>
         <button 
             onClick={onClick}
-            className={`w-full py-2.5 md:py-3 rounded-xl font-bold transition-all text-sm md:text-base ${
+            className={`w-full py-3 rounded-xl font-bold transition-all text-sm md:text-base shadow-md hover:shadow-lg active:scale-95 ${
                 variant === 'solid' 
-                    ? 'bg-white text-neutral-900 hover:bg-gray-100' 
-                    : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'
+                    ? 'bg-gradient-to-r from-primary to-secondary text-white hover:opacity-90' 
+                    : 'bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
             }`}
         >
             {buttonText}
@@ -371,7 +372,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onSignUp }) => {
                 </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto items-center">
                 <PricingCard 
                     variant="outline"
                     title="Starter"
