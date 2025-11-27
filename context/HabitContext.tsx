@@ -1,5 +1,7 @@
+
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import type { Habit, User, HabitType, AppState, SharedHabitData, Comment, SharedHabitDetails, Notification, NotificationType, UserSettings } from '../types';
+import type { Habit, User, AppState, SharedHabitData, Comment, SharedHabitDetails, Notification, NotificationType, UserSettings } from '../types';
+import { HabitType } from '../types';
 import { ACHIEVEMENTS, COLOR_OPTIONS } from '../constants';
 
 type Action =
@@ -75,19 +77,42 @@ const isYesterday = (d1: Date, d2: Date): boolean => {
 }
 
 // --- STREAK CALCULATION ---
-const calculateStreakFromHistory = (completionHistory: string[]): { streak: number, lastCompleted: string | null } => {
-    if (completionHistory.length === 0) return { streak: 0, lastCompleted: null };
+const calculateHabitStreak = (habit: Habit): number => {
+    if (habit.type === HabitType.BAD) {
+        // For BAD habits: Streak = Days since last incident (or creation if no incidents)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-    const uniqueDays = [...new Set(completionHistory.map(iso => iso.split('T')[0]))]
+        let lastIncidentDate = new Date(habit.createdAt);
+        if (habit.completionHistory.length > 0) {
+            // Get the most recent incident
+            const sortedHistory = [...habit.completionHistory].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+            lastIncidentDate = new Date(sortedHistory[0]);
+        }
+        lastIncidentDate.setHours(0, 0, 0, 0);
+
+        // Difference in days
+        const diffTime = today.getTime() - lastIncidentDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        return Math.max(0, diffDays);
+    } 
+    
+    // For GOOD habits: Consecutive days logic
+    if (habit.completionHistory.length === 0) return 0;
+
+    const uniqueDays = [...new Set(habit.completionHistory.map(iso => iso.split('T')[0]))]
         .map(dateStr => new Date(dateStr))
         .sort((a, b) => b.getTime() - a.getTime());
     
     const lastCompletedDate = uniqueDays[0];
-    if (!lastCompletedDate) return { streak: 0, lastCompleted: null };
+    if (!lastCompletedDate) return 0;
 
     const today = new Date();
+    // If not completed today AND not completed yesterday, streak is broken (0)
+    // Exception: If completed today, streak continues.
     if (!isSameDay(lastCompletedDate, today) && !isYesterday(lastCompletedDate, today)) {
-        return { streak: 0, lastCompleted: lastCompletedDate.toISOString() };
+        return 0;
     }
 
     let streak = 1;
@@ -102,7 +127,7 @@ const calculateStreakFromHistory = (completionHistory: string[]): { streak: numb
             break;
         }
     }
-    return { streak, lastCompleted: lastCompletedDate.toISOString() };
+    return streak;
 };
 
 const createNotification = (type: NotificationType, message: string): Notification => ({
@@ -134,14 +159,16 @@ const habitReducer = (state: AppState, action: Action): AppState => {
                 if (!habitWithColor.completionHistory) {
                     return { ...habitWithColor, completionHistory: (h as any).lastCompleted ? [(h as any).lastCompleted] : [] };
                 }
+                // Migration: Ensure type exists
+                if (!habitWithColor.type) {
+                    habitWithColor.type = HabitType.GOOD;
+                }
                 return habitWithColor;
             });
         }
-        // Ensure isPremium exists on loaded state
         if (loadedState.user && loadedState.user.isPremium === undefined) {
             loadedState.user.isPremium = false;
         }
-        // Ensure settings exist
         if (!loadedState.settings) {
             loadedState.settings = DEFAULT_SETTINGS;
         }
@@ -154,9 +181,17 @@ const habitReducer = (state: AppState, action: Action): AppState => {
       let newNotifications: Notification[] = [];
 
       const habitToUpdate = state.habits.find(h => h.id === habitId);
-      if (!habitToUpdate || habitToUpdate.completionHistory.some(iso => iso.startsWith(todayDateString))) {
-          return state; // Already completed, no change
-      }
+      if (!habitToUpdate) return state;
+
+      // Logic check based on type
+      if (habitToUpdate.type === HabitType.GOOD) {
+          // Prevent double completion for Good Habits
+          if (habitToUpdate.completionHistory.some(iso => iso.startsWith(todayDateString))) {
+              return state; 
+          }
+      } 
+      // For BAD habits, "Completing" means logging an incident (Relapse).
+      // We allow logging multiple incidents per day.
       
       const oldStreak = habitToUpdate.streak;
       let newWillpowerPoints = state.user.willpowerPoints;
@@ -165,17 +200,32 @@ const habitReducer = (state: AppState, action: Action): AppState => {
       const updatedHabits = state.habits.map(habit => {
         if (habit.id === habitId) {
           const updatedHistory = [...habit.completionHistory, todayString];
-          const { streak } = calculateStreakFromHistory(updatedHistory);
-          newWillpowerPoints += 10 + streak * 2;
+          
+          // Re-calculate streak using the robust function (passing updated history temporarily)
+          const tempHabit = { ...habit, completionHistory: updatedHistory };
+          const streak = calculateHabitStreak(tempHabit);
+          
+          // Points logic
+          if (habit.type === HabitType.GOOD) {
+              newWillpowerPoints += 10 + streak * 2;
+          } else {
+              // No points for breaking a bad habit streak.
+              // Maybe a small penalty? For now, we just reset.
+          }
+          
           return { ...habit, completionHistory: updatedHistory, streak };
         }
         return habit;
       });
       
       const newStreak = updatedHabits.find(h => h.id === habitId)!.streak;
-      const streakMilestones = [3, 7, 14, 30, 60, 100];
-      if (streakMilestones.includes(newStreak) && newStreak > oldStreak) {
-          newNotifications.push(createNotification('STREAK_MILESTONE', `You've hit a ${newStreak}-day streak on "${habitToUpdate.name}"!`));
+      
+      // Notifications only for Good Habits on streak increase
+      if (habitToUpdate.type === HabitType.GOOD) {
+          const streakMilestones = [3, 7, 14, 30, 60, 100];
+          if (streakMilestones.includes(newStreak) && newStreak > oldStreak) {
+              newNotifications.push(createNotification('STREAK_MILESTONE', `You've hit a ${newStreak}-day streak on "${habitToUpdate.name}"!`));
+          }
       }
 
       // Handle shared habit logic
@@ -187,24 +237,26 @@ const habitReducer = (state: AppState, action: Action): AppState => {
               if (currentUserInGroup) {
                   currentUserInGroup.completions.push(todayString);
                   
-                  const otherMembers = sharedHabit.members.filter(m => m.email !== currentUserEmail);
-                  const friendCompletedToday = otherMembers.some(m => m.completions.some(iso => iso.startsWith(todayDateString)));
+                  if (habitToUpdate.type === HabitType.GOOD) {
+                      const otherMembers = sharedHabit.members.filter(m => m.email !== currentUserEmail);
+                      const friendCompletedToday = otherMembers.some(m => m.completions.some(iso => iso.startsWith(todayDateString)));
 
-                  if (friendCompletedToday) {
-                      newNotifications.push(createNotification('SOCIAL_COMPLETION', `You and a friend both completed '${habitToUpdate.name}' today! (+25 WP)`));
-                      newWillpowerPoints += 25; // Bonus points!
+                      if (friendCompletedToday) {
+                          newNotifications.push(createNotification('SOCIAL_COMPLETION', `You and a friend both completed '${habitToUpdate.name}' today! (+25 WP)`));
+                          newWillpowerPoints += 25; // Bonus points!
+                      }
+                      
+                      // Notify other members
+                      otherMembers.forEach(member => {
+                          updateUserState(member.email, friendState => ({
+                              ...friendState,
+                              notifications: [
+                                  ...friendState.notifications,
+                                  createNotification('SOCIAL_COMPLETION', `${state.user.name} completed "${habitToUpdate.name}" today!`)
+                              ]
+                          }));
+                      });
                   }
-                  
-                  // Notify other members
-                  otherMembers.forEach(member => {
-                      updateUserState(member.email, friendState => ({
-                          ...friendState,
-                          notifications: [
-                              ...friendState.notifications,
-                              createNotification('SOCIAL_COMPLETION', `${state.user.name} completed "${habitToUpdate.name}" today!`)
-                          ]
-                      }));
-                  });
               }
               saveSharedHabitsDB(sharedDB);
           }
@@ -265,8 +317,9 @@ const habitReducer = (state: AppState, action: Action): AppState => {
         return { ...state, habits: state.habits.filter(h => h.id !== action.payload.habitId) };
     }
     case 'RESET_STREAKS': {
+        // Re-calculate streaks for all habits (good and bad)
         const updatedHabits = state.habits.map(habit => {
-           const { streak } = calculateStreakFromHistory(habit.completionHistory);
+           const streak = calculateHabitStreak(habit);
            return { ...habit, streak };
         });
         return { ...state, habits: updatedHabits };
@@ -287,12 +340,12 @@ const habitReducer = (state: AppState, action: Action): AppState => {
         const sharedDB = getSharedHabitsDB();
         let sharedHabitId = habit.sharingDetails?.sharedHabitId;
 
-        if (sharedHabitId && sharedDB[sharedHabitId]) { // Already shared, just add new friend
+        if (sharedHabitId && sharedDB[sharedHabitId]) { 
             const sharedHabit = sharedDB[sharedHabitId];
             if (!sharedHabit.members.some(m => m.email === friendEmail)) {
                 sharedHabit.members.push({ email: friend.email, name: friend.name, completions: [] });
             }
-        } else { // First time sharing this habit
+        } else { 
             sharedHabitId = crypto.randomUUID();
             sharedDB[sharedHabitId] = {
                 id: sharedHabitId,
@@ -309,20 +362,17 @@ const habitReducer = (state: AppState, action: Action): AppState => {
         }
         saveSharedHabitsDB(sharedDB);
         
-        // Add habit to friend's list and notify them
         updateUserState(friendEmail, friendState => {
-            if (friendState.habits.some(h => h.sharingDetails?.sharedHabitId === sharedHabitId)) {
-                return friendState; // Already has this shared habit
-            }
+            if (friendState.habits.some(h => h.sharingDetails?.sharedHabitId === sharedHabitId)) return friendState;
             const newSharedHabitForFriend: Habit = {
                 ...habit,
-                id: crypto.randomUUID(), // Give it a new local ID for the friend
+                id: crypto.randomUUID(),
                 streak: 0,
                 completionHistory: [],
                 sharingDetails: {
                     sharedHabitId: sharedHabitId!,
                     ownerEmail: currentUserEmail,
-                    sharedWith: [] // Friend doesn't see who else it's shared with initially
+                    sharedWith: []
                 }
             };
             const newNotification = createNotification('SOCIAL_INVITE', `${state.user.name} invited you to join the habit "${habit.name}"!`);
@@ -362,7 +412,6 @@ const habitReducer = (state: AppState, action: Action): AppState => {
             sharedHabit.comments.push(newComment);
             saveSharedHabitsDB(sharedDB);
             
-            // Notify other members
             sharedHabit.members.forEach(member => {
                 if (member.email !== currentUserEmail) {
                     updateUserState(member.email, friendState => ({
@@ -375,7 +424,7 @@ const habitReducer = (state: AppState, action: Action): AppState => {
                 }
             });
         }
-        return { ...state }; // No local state change needed, re-renders will pick up from DB
+        return { ...state };
     }
     case 'MARK_NOTIFICATIONS_AS_READ':
         return {
@@ -395,12 +444,10 @@ const habitReducer = (state: AppState, action: Action): AppState => {
         const sharedHabit = sharedDB[habit.sharingDetails.sharedHabitId];
         if (!sharedHabit || sharedHabit.ownerEmail !== currentUserEmail) return state;
 
-        // Remove from DB
         sharedHabit.members = sharedHabit.members.filter(m => m.email !== memberEmail);
         
         let updatedHabits = state.habits;
 
-        // If only owner is left, dissolve the shared habit
         if (sharedHabit.members.length < 2) {
             delete sharedDB[habit.sharingDetails.sharedHabitId];
             updatedHabits = state.habits.map(h => h.id === habit.id ? { ...h, sharingDetails: undefined } : h);
@@ -414,7 +461,6 @@ const habitReducer = (state: AppState, action: Action): AppState => {
         }
         saveSharedHabitsDB(sharedDB);
 
-        // Remove habit from the friend's list
         updateUserState(memberEmail, friendState => ({
             ...friendState,
             habits: friendState.habits.filter(h => h.sharingDetails?.sharedHabitId !== habit.sharingDetails!.sharedHabitId)
@@ -478,13 +524,9 @@ const getInitialStateForUser = (user: { name: string; email: string }): AppState
         if (savedStateJSON) {
             const savedState: AppState = JSON.parse(savedStateJSON);
             savedState.user.name = user.name;
-            // Ensure notifications array exists for backward compatibility
             savedState.notifications = savedState.notifications || [];
-            // Ensure isPremium exists
             if (savedState.user.isPremium === undefined) savedState.user.isPremium = false;
-            // Ensure settings exist
             if (!savedState.settings) savedState.settings = DEFAULT_SETTINGS;
-            
             return savedState;
         }
     } catch (error) {
@@ -505,7 +547,6 @@ export const HabitProvider: React.FC<HabitProviderProps> = ({ children, user }) 
 
   useEffect(() => {
     dispatch({ type: 'RESET_STREAKS' });
-    // This is a simple polling mechanism to check for new notifications from other users
     const interval = setInterval(() => {
         const currentState = getInitialStateForUser(user);
         if (JSON.stringify(currentState) !== JSON.stringify(state)) {
@@ -518,7 +559,7 @@ export const HabitProvider: React.FC<HabitProviderProps> = ({ children, user }) 
   useEffect(() => {
     try {
         const stateToSave = { ...state };
-        delete (stateToSave as any).userEmail; // Don't save the temporary email
+        delete (stateToSave as any).userEmail;
         localStorage.setItem(storageKey, JSON.stringify(stateToSave));
     } catch (error) {
         console.error("Could not save state to localStorage", error);

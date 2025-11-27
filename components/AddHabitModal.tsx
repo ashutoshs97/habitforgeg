@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useHabits } from '../context/HabitContext';
 import { HabitType } from '../types';
@@ -22,6 +23,7 @@ const AddHabitModal: React.FC<AddHabitModalProps> = ({ isOpen, onClose }) => {
       setName('');
       setEmoji(EMOJI_OPTIONS[0]);
       setColor(COLOR_OPTIONS[0]);
+      setType(HabitType.GOOD);
       onClose();
     }
   };
@@ -33,6 +35,25 @@ const AddHabitModal: React.FC<AddHabitModalProps> = ({ isOpen, onClose }) => {
       <div className="bg-white dark:bg-neutral-focus rounded-2xl shadow-xl p-8 w-full max-w-md animate-pop-in" onClick={e => e.stopPropagation()}>
         <h2 className="text-2xl font-bold mb-6 text-neutral dark:text-gray-100">Forge a New Habit</h2>
         <form onSubmit={handleSubmit}>
+          
+          {/* Habit Type Selector */}
+          <div className="mb-5 flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setType(HabitType.GOOD)}
+                className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${type === HabitType.GOOD ? 'bg-white dark:bg-gray-600 text-primary shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
+              >
+                  ✨ Build Habit
+              </button>
+              <button
+                type="button"
+                onClick={() => setType(HabitType.BAD)}
+                className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${type === HabitType.BAD ? 'bg-white dark:bg-gray-600 text-red-500 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
+              >
+                  🛡️ Break Habit
+              </button>
+          </div>
+
           <div className="mb-5">
             <label htmlFor="habit-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Habit Name
@@ -43,7 +64,7 @@ const AddHabitModal: React.FC<AddHabitModalProps> = ({ isOpen, onClose }) => {
               value={name}
               onChange={e => setName(e.target.value)}
               className="w-full px-4 py-3 bg-white dark:bg-neutral border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition"
-              placeholder="e.g., Read for 15 minutes"
+              placeholder={type === HabitType.GOOD ? "e.g., Read for 15 minutes" : "e.g., No Sugar"}
               required
             />
           </div>
@@ -84,9 +105,6 @@ const AddHabitModal: React.FC<AddHabitModalProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          {/* Habit type could be added here if needed in future */}
-          {/* <input type="hidden" value={type} /> */}
-
           <div className="flex justify-end space-x-4">
             <button
               type="button"
@@ -97,9 +115,9 @@ const AddHabitModal: React.FC<AddHabitModalProps> = ({ isOpen, onClose }) => {
             </button>
             <button
               type="submit"
-              className="px-6 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-focus shadow-lg shadow-primary/30 transition"
+              className={`px-6 py-3 text-white font-semibold rounded-xl hover:opacity-90 shadow-lg transition ${type === HabitType.BAD ? 'bg-red-500 shadow-red-200' : 'bg-primary shadow-primary/30'}`}
             >
-              Add Habit
+              {type === HabitType.BAD ? 'Start Breaking' : 'Add Habit'}
             </button>
           </div>
         </form>

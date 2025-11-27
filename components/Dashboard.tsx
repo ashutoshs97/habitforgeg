@@ -17,6 +17,7 @@ import CalorieWidget from './CalorieWidget';
 import PointTrackerWidget from './PointTrackerWidget';
 import TopStreakWidget from './TopStreakWidget';
 import FoodScannerWidget from './FoodScannerWidget';
+import Chatbot from './Chatbot'; // Import Chatbot
 import { useHabits } from '../context/HabitContext';
 import type { Habit, Notification } from '../types';
 
@@ -27,6 +28,8 @@ const Dashboard: React.FC = () => {
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
   const [habitToShare, setHabitToShare] = useState<Habit | null>(null);
   const [popupNotification, setPopupNotification] = useState<Notification | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false); // Chat state
+  const [panicHabit, setPanicHabit] = useState<string | null>(null); // State for panic context
 
   const { state, dispatch } = useHabits();
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
@@ -51,14 +54,20 @@ const Dashboard: React.FC = () => {
       setPopupNotification(null);
   }
 
+  // Handle Panic Button Click from Habit Item
+  const handlePanic = (habit: Habit) => {
+      setPanicHabit(habit.name);
+      setIsChatOpen(true);
+  };
+
   const selectedHabit = state.habits.find(h => h.id === selectedHabitId);
   
   const tabs = [
       { id: 'my-habits', label: 'My Habits', icon: '🧘' },
       { id: 'shared', label: 'Shared', icon: '👥' },
       { id: 'friends', label: 'Friends', icon: '👋' },
-      { id: 'food-scanner', label: 'Scanner', icon: '📸' }, // Shortened label
-      { id: 'refinement', label: 'Coach', icon: '🧬' }, // Shortened label
+      { id: 'food-scanner', label: 'Scanner', icon: '📸' }, 
+      { id: 'refinement', label: 'Coach', icon: '🧬' }, 
       { id: 'premium', label: 'Premium', icon: '💎' },
   ] as const;
 
@@ -106,7 +115,7 @@ const Dashboard: React.FC = () => {
                   {activeTab === 'my-habits' && (
                       <>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                             {/* Premium Banner (Only for Free Users) */}
+                             {/* Premium Banner */}
                              {!state.user.isPremium && (
                                 <div 
                                     onClick={() => setActiveTab('premium')}
@@ -125,22 +134,19 @@ const Dashboard: React.FC = () => {
                                 </div>
                              )}
                              
-                             {/* Widgets Grid */}
-                             <div className="col-span-1 h-32 md:h-40 lg:h-auto">
-                                 <CalorieWidget />
-                             </div>
-                             <div className="col-span-1 h-32 md:h-40 lg:h-auto">
-                                 <PointTrackerWidget />
-                             </div>
-                             <div className="col-span-1 h-32 md:h-40 lg:h-auto">
-                                 <TopStreakWidget />
-                             </div>
-                             <div className="col-span-1 h-32 md:h-40 lg:h-auto">
-                                 <FoodScannerWidget onClick={() => setActiveTab('food-scanner')} />
-                             </div>
+                             <div className="col-span-1 h-32 md:h-40 lg:h-auto"><CalorieWidget /></div>
+                             <div className="col-span-1 h-32 md:h-40 lg:h-auto"><PointTrackerWidget /></div>
+                             <div className="col-span-1 h-32 md:h-40 lg:h-auto"><TopStreakWidget /></div>
+                             <div className="col-span-1 h-32 md:h-40 lg:h-auto"><FoodScannerWidget onClick={() => setActiveTab('food-scanner')} /></div>
                           </div>
 
-                          <HabitList filter="personal" onViewProgress={(habitId) => setSelectedHabitId(habitId)} onShare={handleOpenShareModal} />
+                          {/* Pass onPanic handler to HabitList */}
+                          <HabitList 
+                            filter="personal" 
+                            onViewProgress={(habitId) => setSelectedHabitId(habitId)} 
+                            onShare={handleOpenShareModal}
+                            onPanic={handlePanic} 
+                          />
                       </>
                   )}
                   
@@ -148,24 +154,12 @@ const Dashboard: React.FC = () => {
                       <HabitList filter="shared" onViewProgress={(habitId) => setSelectedHabitId(habitId)} onShare={handleOpenShareModal} />
                   )}
                   
-                  {activeTab === 'friends' && (
-                      <FriendsView />
-                  )}
-
-                  {activeTab === 'food-scanner' && (
-                      <FoodScannerView />
-                  )}
-
-                  {activeTab === 'refinement' && (
-                      <GoalRefinementView />
-                  )}
-                  
-                  {activeTab === 'premium' && (
-                      <PremiumView />
-                  )}
+                  {activeTab === 'friends' && <FriendsView />}
+                  {activeTab === 'food-scanner' && <FoodScannerView />}
+                  {activeTab === 'refinement' && <GoalRefinementView />}
+                  {activeTab === 'premium' && <PremiumView />}
                 </div>
                 
-                {/* Sidebar (Achievements) - Hide on Premium and Scanner tabs for full width */}
                 {!isFullWidthTab && (
                     <div className="space-y-8">
                         <AchievementsPanel />
@@ -183,6 +177,23 @@ const Dashboard: React.FC = () => {
           </>
         )}
       </main>
+      
+      {/* Floating Chatbot Button (always visible unless chat is open) */}
+      {!isChatOpen && (
+          <button 
+            onClick={() => { setPanicHabit(null); setIsChatOpen(true); }}
+            className="fixed bottom-6 right-6 bg-primary hover:bg-primary-focus text-white p-4 rounded-full shadow-2xl z-40 transition-transform hover:scale-110 animate-fade-in"
+            title="Chat with Forgey"
+          >
+              <span className="text-2xl">🤖</span>
+          </button>
+      )}
+
+      {/* Chatbot Window */}
+      {isChatOpen && (
+          <Chatbot onClose={() => setIsChatOpen(false)} panicContext={panicHabit || undefined} />
+      )}
+
       <AddHabitModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
       <PremiumModal isOpen={isPremiumModalOpen} onClose={() => setIsPremiumModalOpen(false)} />
       {habitToShare && (

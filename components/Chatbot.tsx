@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import { useHabits } from '../context/HabitContext';
@@ -5,16 +6,28 @@ import type { ChatMessage } from '../types';
 
 interface ChatbotProps {
   onClose: () => void;
+  panicContext?: string; // Optional context for "Panic Mode"
 }
 
-const Chatbot: React.FC<ChatbotProps> = ({ onClose }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { sender: 'bot', text: "Hi! I'm Forgey, your personal habit coach. How can I help you today?" }
-  ]);
+const Chatbot: React.FC<ChatbotProps> = ({ onClose, panicContext }) => {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { state } = useHabits();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Initialize chat based on context (Panic vs Normal)
+  useEffect(() => {
+      if (panicContext) {
+          setMessages([
+              { sender: 'bot', text: `🚨 Emergency Support Activated.\n\nI see you're feeling an urge to ${panicContext}. Take a deep breath. 🌬️\n\nI'm here. Tell me what's triggering this feeling right now?` }
+          ]);
+      } else {
+          setMessages([
+              { sender: 'bot', text: "Hi! I'm Forgey, your personal habit coach. How can I help you today?" }
+          ]);
+      }
+  }, [panicContext]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -32,31 +45,31 @@ const Chatbot: React.FC<ChatbotProps> = ({ onClose }) => {
     setIsLoading(true);
 
     try {
-      // Fix: Initialize the GoogleGenAI client using the API key from environment variables.
-      // The API key's availability is a hard requirement and is handled externally, so no check is needed.
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
       const habitContext = state.habits.map(h => `- ${h.name} (Current Streak: ${h.streak} days)`).join('\n');
       const userContext = `Level: ${state.user.level}, Willpower Points: ${state.user.willpowerPoints}`;
 
-      // Fix: Improved system instruction with user context and separated user question into `contents`.
-      const systemInstruction = `You are Forgey, a friendly and motivational AI coach for the HabitForge app. Your goal is to encourage users, provide tips for building habits, and celebrate their progress. Keep your responses concise, positive, and supportive. Use emojis to make the conversation engaging. Analyze the user's progress and habits to give personalized advice.\n\nHere is the user's current progress and habits:\n${userContext}\n${habitContext}`;
+      let systemInstruction = `You are Forgey, a friendly and motivational AI coach for the HabitForge app. Your goal is to encourage users, provide tips for building habits, and celebrate their progress.`;
+      
+      if (panicContext) {
+          systemInstruction += `\n\nCRITICAL: The user is currently in "Panic Mode" fighting an urge to ${panicContext}. Use "Urge Surfing" techniques. Be empathetic but firm. Help them delay the action, distract themselves, or understand the trigger. Keep responses short and calming.`;
+      } else {
+          systemInstruction += `\n\nKeep your responses concise, positive, and supportive. Use emojis to make the conversation engaging. Analyze the user's progress and habits to give personalized advice.\n\nHere is the user's current progress and habits:\n${userContext}\n${habitContext}`;
+      }
 
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: input,
-        config: {
-          systemInstruction,
-        }
+        config: { systemInstruction }
       });
 
-      // Fix: Correctly extract text from the response.
       const botMessage: ChatMessage = { sender: 'bot', text: response.text };
       setMessages(prev => [...prev, botMessage]);
 
     } catch (error) {
       console.error('Error communicating with Gemini API:', error);
-      const errorMessage: ChatMessage = { sender: 'bot', text: "Sorry, I'm having a little trouble connecting right now. Please try again later." };
+      const errorMessage: ChatMessage = { sender: 'bot', text: "Sorry, I'm having a little trouble connecting right now. Just breathe. You got this." };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
@@ -64,9 +77,11 @@ const Chatbot: React.FC<ChatbotProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed bottom-24 right-6 w-[90vw] max-w-sm h-[60vh] max-h-[500px] z-50 flex flex-col animate-slide-in-up">
-      <div className="bg-white dark:bg-neutral-focus rounded-t-2xl p-4 flex justify-between items-center shadow-lg border-b border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-bold text-neutral dark:text-white">Chat with Forgey 🤖</h3>
+    <div className={`fixed bottom-24 right-6 w-[90vw] max-w-sm h-[60vh] max-h-[500px] z-50 flex flex-col animate-slide-in-up ${panicContext ? 'border-2 border-red-400 shadow-red-200 shadow-2xl' : ''}`}>
+      <div className={`rounded-t-2xl p-4 flex justify-between items-center shadow-lg border-b ${panicContext ? 'bg-red-50 border-red-200' : 'bg-white dark:bg-neutral-focus border-gray-200 dark:border-gray-700'}`}>
+        <h3 className={`text-lg font-bold ${panicContext ? 'text-red-700' : 'text-neutral dark:text-white'}`}>
+            {panicContext ? '🛡️ Urge Support' : 'Chat with Forgey 🤖'}
+        </h3>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-700 dark:hover:text-white">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -100,9 +115,10 @@ const Chatbot: React.FC<ChatbotProps> = ({ onClose }) => {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask for advice..."
+            placeholder={panicContext ? "I feel like..." : "Ask for advice..."}
             className="w-full px-4 py-2 bg-white dark:bg-neutral border border-gray-300 dark:border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-primary"
             disabled={isLoading}
+            autoFocus={!!panicContext}
           />
           <button
             type="submit"

@@ -7,10 +7,11 @@ import type { Habit } from '../types';
 interface HabitListProps {
   onViewProgress: (habitId: string) => void;
   onShare: (habit: Habit) => void;
+  onPanic?: (habit: Habit) => void; // Added panic handler
   filter?: 'all' | 'personal' | 'shared';
 }
 
-const HabitList: React.FC<HabitListProps> = ({ onViewProgress, onShare, filter = 'all' }) => {
+const HabitList: React.FC<HabitListProps> = ({ onViewProgress, onShare, onPanic, filter = 'all' }) => {
   const { state } = useHabits();
 
   const filteredHabits = state.habits.filter(habit => {
@@ -58,7 +59,13 @@ const HabitList: React.FC<HabitListProps> = ({ onViewProgress, onShare, filter =
   return (
     <div className="space-y-4">
       {filteredHabits.map(habit => (
-        <HabitItem key={habit.id} habit={habit} onViewProgress={onViewProgress} onShare={onShare} />
+        <HabitItem 
+            key={habit.id} 
+            habit={habit} 
+            onViewProgress={onViewProgress} 
+            onShare={onShare}
+            onPanic={onPanic}
+        />
       ))}
     </div>
   );

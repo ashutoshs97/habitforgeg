@@ -219,6 +219,20 @@ const FoodScannerView: React.FC = () => {
                       </div>
                   )}
 
+                  {/* Skeleton Loader during analysis */}
+                  {isAnalyzing && (
+                      <div className="mt-6 animate-pulse space-y-4">
+                          <div className="bg-base-200 dark:bg-neutral border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-5">
+                              <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-24 mb-3"></div>
+                              <div className="flex justify-between items-end">
+                                  <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded w-48"></div>
+                                  <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded w-16"></div>
+                              </div>
+                          </div>
+                          <div className="w-full h-12 bg-gray-300 dark:bg-gray-600 rounded-xl"></div>
+                      </div>
+                  )}
+
                   {analysisResult && (
                       <div className="mt-6 animate-slide-in-up">
                           <div className="bg-base-200 dark:bg-neutral border border-primary/20 rounded-xl p-4 md:p-5 flex justify-between items-center">
