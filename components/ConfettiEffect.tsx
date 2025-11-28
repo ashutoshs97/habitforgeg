@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { useHabits } from '../context/HabitContext';
 
@@ -25,7 +24,7 @@ const ConfettiEffect: React.FC = () => {
 
     const particles: Particle[] = [];
     const particleCount = 150;
-    const colors = ['#5D5FEF', '#11D1A9', '#F59E0B', '#EF4444', '#3B82F6'];
+    const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#FF4757', '#1E90FF'];
 
     class Particle {
       x: number;

@@ -1,73 +1,117 @@
-# HabitForge
+# HabitForge 🚀
 
-HabitForge is a comprehensive, gamified habit-tracking platform designed to help users build good habits and break bad ones. Built with the MERN stack (MongoDB, Express, React, Node.js) and TypeScript, it leverages AI for personalized insights and multimodal data entry.
+HabitForge is an advanced, gamified behavioral modification platform designed to help users build positive routines and break addiction cycles. Built with the MERN architecture and enhanced by Google's Gemini AI, it combines psychological principles with modern web technology to create a sticky, impactful user experience.
 
-## Features
+![HabitForge Banner](https://via.placeholder.com/1200x400/5D5FEF/FFFFFF?text=HabitForge+Platform)
 
-### 🎮 Gamification Engine
-- **Experience & Leveling:** Users earn Willpower Points (WP) for every action, leveling up as they progress.
-- **Streaks:** Advanced streak calculation with visual heatmaps.
-- **Achievements:** Over 15 unique unlockable badges based on consistency, volume, and variety.
+## 🌟 Key Features
 
-### 🤖 AI-Powered Tools
-- **Food Scanner:** Integrates Google Gemini 2.5 Flash for multimodal analysis. Users can snap photos of meals to automatically log calories and nutrition data.
-- **Goal Refinement Coach:** A behavioral analysis engine that reviews user logs to identify failure patterns and suggests concrete, actionable adjustments to habit goals.
-- **Smart Chatbot:** An in-app coach ("Forgey") providing context-aware motivation.
+### 🧠 AI-Powered Behavioral Coaching
+*   **Multimodal Food Scanner:** Utilizing Gemini 2.5 Flash, users can snap photos of meals. The system analyzes the visual data to identify food items and estimate caloric density instantly.
+*   **Goal Refinement Engine:** A background agent analyzes user log data (30-day history). It detects failure patterns and suggests "Micro-Habits" to lower friction (e.g., converting "Run 5k" to "Put on running shoes").
+*   **"Forgey" Chatbot:** A context-aware AI companion that provides motivation based on the user's current level and specific habit list.
+
+### 🛡️ Breaking Bad Habits (Addiction Protocol)
+*   **Panic Mode:** A specialized interface for "Bad" habits (e.g., Smoking). Instead of a checkbox, users have a **Panic Button**.
+*   **Urge Surfing:** Triggering the Panic Button immediately launches an emergency chat session with the AI, initialized with therapeutic scripts to help the user ride out the craving.
+*   **Incident Logging:** Tracks "Days Free" streaks separately from positive repetition streaks.
+
+### 🎮 The Gamification Engine
+*   **RPG Mechanics:** Users earn **Willpower Points (WP)** for every action.
+*   **Progression:** Visual leveling system with progress bars and unlocked milestones.
+*   **Achievements:** Over 15 unique unlockable badges (e.g., "Week Warrior", "Social Butterfly") based on consistency, volume, and social interaction.
 
 ### 🤝 Social Connectivity
-- **Shared Habits:** Invite friends to join specific habits.
-- **Group Progress:** View collective completion calendars and chat within habit groups.
-- **Real-time Notifications:** Alerts for friend invites, comments, and milestone celebrations.
+*   **Shared Accountability:** Invite friends to specific habits via email.
+*   **Group Heatmaps:** Visualize collective group consistency on a shared calendar.
+*   **Real-time Chat:** Built-in discussion threads for shared habits to foster community support.
 
-### 💎 Premium & Monetization
-- **Subscription Model:** Tiered access (Free/Premium).
-- **Payment Integration:** Secure checkout flow using PayPal/Stripe architecture (Order Creation -> Capture).
-- **Exclusive Features:** Premium users gain access to advanced widgets and unlimited history.
+## 🏗️ System Architecture
 
-## Tech Stack
+HabitForge follows a **Client-Server-AI** architecture designed for security and scalability.
 
-- **Frontend:** React 19, Vite, TypeScript, Tailwind CSS
-- **Backend:** Node.js, Express.js
-- **AI:** Google GenAI SDK (@google/genai)
-- **Deployment:** Render (Backend), Vercel/Static (Frontend)
+```mermaid
+graph TD
+    Client[React Frontend] -->|JSON/HTTP| API[Node.js/Express Gateway]
+    API -->|Secure Request| Gemini[Google Gemini API]
+    API -->|Transaction| Payment[Mock Payment Provider]
+    Client -->|Persistence| LocalStore[Browser Storage]
+    Gemini -->|Analysis| API
+    API -->|Response| Client
+```
 
-## Setup & Installation
+### Tech Stack
+*   **Frontend:** React 19, Vite, TypeScript, Tailwind CSS (Dark Mode enabled).
+*   **State Management:** React Context API + Reducer Pattern (Flux architecture).
+*   **Backend:** Node.js, Express.js (Acts as a secure BFF - Backend for Frontend).
+*   **AI Model:** Google Gemini 2.5 Flash (optimized for low latency multimodal tasks).
+*   **Data Export:** CSV generation engine for GDPR compliance/data portability.
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/habitforge.git
-   cd habitforge
-   ```
+## 📂 Project Structure
 
-2. **Install Dependencies**
-   ```bash
-   # Install root/frontend dependencies
-   npm install
+```text
+/habitforge
+├── /server                 # Node.js Backend Gateway
+│   ├── index.js            # Unified API Endpoint (AI, Payments, Email)
+│   └── package.json
+├── /src
+│   ├── /components         # React UI Components (Widgets, Modals, Views)
+│   ├── /context            # Global State Logic (HabitContext, AuthContext)
+│   ├── /types              # TypeScript Interfaces & Enums
+│   └── App.tsx             # Main Routing & Layout
+├── constants.ts            # Gamification Rules & Achievement Definitions
+└── metadata.json           # Application Manifest
+```
 
-   # Install backend dependencies
-   cd server
-   npm install
-   ```
+## 🔌 API Documentation
 
-3. **Environment Configuration**
-   Create a `.env` file in the `server` directory:
-   ```env
-   PORT=5000
-   API_KEY=your_google_genai_api_key
-   ```
+The backend exposes several RESTful endpoints managed via `server/index.js`.
 
-4. **Run the Application**
-   ```bash
-   # Run Backend (from /server)
-   npm start
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/scan-food` | Accepts Base64 image; returns JSON nutrition data. |
+| `POST` | `/api/refine-goal` | Accepts user history; returns habit modification suggestions. |
+| `POST` | `/api/payments/create` | Initiates a secure transaction session. |
+| `GET` | `/api/export/csv/:id` | Generates a downloadable CSV of user history. |
+| `POST` | `/api/reminders/send` | Dispatches email notifications via SMTP transport. |
 
-   # Run Frontend (from root)
-   npm run dev
-   ```
+## 🚀 Setup & Installation
 
-## Architecture Notes
+**Prerequisites:** Node.js v18+
 
-The application uses a unified Express backend (`server/index.js`) to handle all API requests, including AI processing, payment transactions, and data exports. The frontend communicates via RESTful endpoints, with a robust Context API (`HabitContext`) managing global state and optimistic UI updates.
+1.  **Clone the Repository**
+    ```bash
+    git clone https://github.com/yourusername/habitforge.git
+    cd habitforge
+    ```
+
+2.  **Install Dependencies**
+    ```bash
+    # Install Frontend Dependencies
+    npm install
+
+    # Install Backend Dependencies
+    cd server
+    npm install
+    cd ..
+    ```
+
+3.  **Environment Configuration**
+    Create a `.env` file in the `/server` directory with your credentials:
+    ```env
+    PORT=5000
+    API_KEY=your_google_gemini_api_key
+    ```
+
+4.  **Launch Application**
+    *   **Backend:** `cd server && npm start` (Runs on port 5000)
+    *   **Frontend:** `npm run dev` (Runs on port 5173)
+
+## 🔮 Future Scope
+
+*   **PWA Support:** Implementation of Service Workers for offline logging.
+*   **Database Migration:** Transition from LocalStorage to MongoDB Atlas for cross-device synchronization.
+*   **Wearable Integration:** API hooks for Apple Health/Google Fit to auto-complete fitness habits.
 
 ---
-© 2025 HabitForge. All rights reserved.
+© 2025 HabitForge. Designed & Engineered by [Your Name].

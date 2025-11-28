@@ -131,12 +131,14 @@ export const ACHIEVEMENTS: Achievement[] = [
 export const EMOJI_OPTIONS = ['💪', '🧘', '📖', '💧', '🏃', '🚭', '📱', '🥗', '😴', '🎨', '🎸', '🧠', '💊', '🧹'];
 
 export const COLOR_OPTIONS = [
-  '#5D5FEF', // Primary Purple
-  '#11D1A9', // Secondary Teal
-  '#F59E0B', // Amber
-  '#EF4444', // Red
-  '#3B82F6', // Blue
-  '#EC4899', // Pink
-  '#8B5CF6', // Violet
-  '#10B981', // Emerald
+  '#FF6B6B', // Coral
+  '#4ECDC4', // Turquoise
+  '#FFE66D', // Soft Yellow
+  '#FF4757', // Red
+  '#2ED573', // Neon Green
+  '#1E90FF', // Dodger Blue
+  '#3742FA', // Bright Blue
+  '#A3CB38', // Olive
+  '#D980FA', // Lavender
+  '#833471', // Plum
 ];
